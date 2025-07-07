@@ -4,6 +4,75 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>がん患者向けプラットフォーム</title>
+  <style>
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+    header {
+      background: #006699;
+      color: #fff;
+      padding: 1rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    nav ul li {
+      margin-right: 1rem;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+    }
+    nav ul li a:hover {
+      text-decoration: underline;
+    }
+    main {
+      padding: 1rem;
+    }
+    section {
+      background: #fff;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    section h2 {
+      border-bottom: 2px solid #006699;
+      padding-bottom: 0.5rem;
+      margin-top: 0;
+    }
+    ul li {
+      margin-left: 1rem;
+    }
+    footer {
+      background: #006699;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 600px) {
+      nav ul {
+        flex-direction: column;
+      }
+      nav ul li {
+        margin-bottom: 0.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -22,13 +91,11 @@
   </header>
 
   <main>
-    <!-- ログイン / 新規会員登録 -->
     <section id="login">
       <h2>ログイン / 新規登録</h2>
       <p>会員登録、ログインはこちらから。</p>
     </section>
 
-    <!-- マイページ -->
     <section id="mypage">
       <h2>マイページ</h2>
       <ul>
@@ -46,7 +113,6 @@
       </ul>
     </section>
 
-    <!-- コンシェルジュ -->
     <section id="concierge">
       <h2>コンシェルジュ・相談</h2>
       <ul>
@@ -57,7 +123,6 @@
       </ul>
     </section>
 
-    <!-- 静的コンテンツ -->
     <section id="contents">
       <h2>がんに関する情報</h2>
       <ul>
@@ -74,7 +139,6 @@
       </ul>
     </section>
 
-    <!-- コミュニティ -->
     <section id="community">
       <h2>コミュニティ・体験談・交流</h2>
       <ul>
@@ -87,7 +151,6 @@
       </ul>
     </section>
 
-    <!-- 検査・診断・治療 -->
     <section id="diagnosis">
       <h2>検査・診断・治療情報</h2>
       <ul>
@@ -98,7 +161,6 @@
       </ul>
     </section>
 
-    <!-- 生活支援 -->
     <section id="social">
       <h2>生活・就労・保険サポート</h2>
       <ul>
@@ -111,7 +173,6 @@
       </ul>
     </section>
 
-    <!-- 共通機能 -->
     <section id="common">
       <h2>共通機能</h2>
       <ul>
