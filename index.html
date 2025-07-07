@@ -3,193 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>がん患者向けプラットフォーム</title>
+  <title>ログイン - がん患者支援プラットフォーム</title>
   <style>
-    body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f8f9fa;
-      color: #333;
-      line-height: 1.6;
+    body { font-family:sans-serif; background:#f0f0f0; margin:0; }
+    .login-container {
+      max-width: 400px; margin: 5rem auto; background: #fff;
+      padding: 2rem; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    header {
-      background: #006699;
-      color: #fff;
-      padding: 1rem;
+    label { display: block; margin-top: 1rem; }
+    input { width: 100%; padding: 0.5rem; }
+    button {
+      margin-top: 1rem; padding: 0.7rem; width: 100%;
+      background: #006699; color: #fff; border: none; cursor: pointer;
     }
-    header h1 {
-      margin: 0;
-      font-size: 1.5rem;
-    }
-    nav ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: flex;
-      flex-wrap: wrap;
-    }
-    nav ul li {
-      margin-right: 1rem;
-    }
-    nav ul li a {
-      color: #fff;
-      text-decoration: none;
-    }
-    nav ul li a:hover {
-      text-decoration: underline;
-    }
-    main {
-      padding: 1rem;
-    }
-    section {
-      background: #fff;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      border-radius: 5px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    section h2 {
-      border-bottom: 2px solid #006699;
-      padding-bottom: 0.5rem;
-      margin-top: 0;
-    }
-    ul li {
-      margin-left: 1rem;
-    }
-    footer {
-      background: #006699;
-      color: #fff;
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.9rem;
-    }
-    @media (max-width: 600px) {
-      nav ul {
-        flex-direction: column;
-      }
-      nav ul li {
-        margin-bottom: 0.5rem;
-      }
-    }
+    button:hover { background: #005080; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>がん患者支援プラットフォーム</h1>
-    <nav>
-      <ul>
-        <li><a href="#login">ログイン</a></li>
-        <li><a href="#mypage">マイページ</a></li>
-        <li><a href="#concierge">コンシェルジュ相談</a></li>
-        <li><a href="#contents">静的コンテンツ</a></li>
-        <li><a href="#community">コミュニティ</a></li>
-        <li><a href="#diagnosis">検査・診断・治療</a></li>
-        <li><a href="#social">生活支援</a></li>
-      </ul>
-    </nav>
-  </header>
+  <div class="login-container">
+    <h2>ログイン</h2>
+    <label>ユーザー名
+      <input type="text" id="username" />
+    </label>
+    <label>パスワード
+      <input type="password" id="password" />
+    </label>
+    <button onclick="login()">ログイン</button>
+    <div id="error" style="color:red;margin-top:1rem;"></div>
+  </div>
 
-  <main>
-    <section id="login">
-      <h2>ログイン / 新規登録</h2>
-      <p>会員登録、ログインはこちらから。</p>
-    </section>
+  <script>
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
 
-    <section id="mypage">
-      <h2>マイページ</h2>
-      <ul>
-        <li>悩み・課題</li>
-        <li>基本情報</li>
-        <li>がん種</li>
-        <li>ステージ</li>
-        <li>医療リテラシー</li>
-        <li>検査データ</li>
-        <li>生活習慣</li>
-        <li>症状</li>
-        <li>治療歴</li>
-        <li>治療ステータス</li>
-        <li>お問い合わせ</li>
-      </ul>
-    </section>
-
-    <section id="concierge">
-      <h2>コンシェルジュ・相談</h2>
-      <ul>
-        <li>コンシェルジュリスト</li>
-        <li>詳細</li>
-        <li>面談申し込み</li>
-        <li>問い合わせ</li>
-      </ul>
-    </section>
-
-    <section id="contents">
-      <h2>がんに関する情報</h2>
-      <ul>
-        <li>がんについて（遺伝子変異など）</li>
-        <li>ステージとは</li>
-        <li>標準治療</li>
-        <li>補助療法（高濃度ビタミンC、水素、樹状細胞）</li>
-        <li>標準治療で改善しない人の選択肢（遺伝子治療など）</li>
-        <li>抗がん剤の副作用</li>
-        <li>がん性疼痛</li>
-        <li>治療エビデンス情報</li>
-        <li>新薬開発情報</li>
-        <li>SEO対策bigWordコンテンツ</li>
-      </ul>
-    </section>
-
-    <section id="community">
-      <h2>コミュニティ・体験談・交流</h2>
-      <ul>
-        <li>患者同士の交流</li>
-        <li>医療従事者との交流</li>
-        <li>医師との交流</li>
-        <li>体験談投稿</li>
-        <li>座談会・インタビュー</li>
-        <li>イベント紹介（市民公開講座、学会、患者会など）</li>
-      </ul>
-    </section>
-
-    <section id="diagnosis">
-      <h2>検査・診断・治療情報</h2>
-      <ul>
-        <li>病名・薬剤名・治療法の辞典</li>
-        <li>検査方法・種類</li>
-        <li>病院・クリニック情報</li>
-        <li>病院レーティング</li>
-      </ul>
-    </section>
-
-    <section id="social">
-      <h2>生活・就労・保険サポート</h2>
-      <ul>
-        <li>がんでも入れる保険</li>
-        <li>がん診断時に受け取れる保険</li>
-        <li>がんでも働ける会社情報</li>
-        <li>行政・民間の生活支援</li>
-        <li>民間療法的健康生活</li>
-        <li>公的制度（高額療養費制度など）</li>
-      </ul>
-    </section>
-
-    <section id="common">
-      <h2>共通機能</h2>
-      <ul>
-        <li>検索</li>
-        <li>コンテンツマッチング</li>
-        <li>ユーザーマッチングアルゴリズム</li>
-        <li>MSPスコア</li>
-        <li>チャットボット</li>
-        <li>音声入力</li>
-        <li>画像OCR入力</li>
-        <li>コミュニティマネジメント</li>
-      </ul>
-    </section>
-  </main>
-
-  <footer>
-    <small>&copy; 2025 がん患者支援プラットフォーム</small>
-  </footer>
+      // 簡易判定：ユーザー名「user」、パスワード「pass」のみOK
+      if(user === "user" && pass === "pass"){
+        // ログイン成功したらメインページへ
+        window.location.href = "main.html"; // ここに本体のファイル名
+      } else {
+        document.getElementById("error").textContent = "ユーザー名またはパスワードが違います";
+      }
+    }
+  </script>
 </body>
 </html>
