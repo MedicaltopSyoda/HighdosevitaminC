@@ -31,7 +31,7 @@
   }
   .fade-out { opacity: 0; }
 
-  /* カードスタイル */
+  /* カード */
   .card {
     position: absolute;
     width: 80vw;
@@ -64,6 +64,20 @@
   }
   .left-option { color: #e91e63; }
   .right-option { color: #2196f3; }
+
+  /* スワイプ中エフェクト */
+  .card::before {
+    content: "";
+    position: absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    border-radius:15px;
+    background: transparent;
+    pointer-events: none;
+    transition: background 0.2s;
+  }
+  .card.swipe-left::before { background: rgba(233,30,99,0.1); }
+  .card.swipe-right::before { background: rgba(33,150,243,0.1); }
 
   /* 最終ビュー */
   .final-view {
@@ -109,33 +123,33 @@
 </div>
 
 <script>
-// カードデータ（分岐型）
+// 分岐定義
 const flow = {
-  start: { question:"あなたはがん患者ですか？", left:"いいえ", right:"はい",
+  start: { q:"あなたはがん患者ですか？", left:"いいえ", right:"はい",
     next:{left:"notpatient", right:"patient"} },
-  patient: { question:"どちらを知りたいですか？", left:"同じ患者", right:"エビデンス",
+  patient: { q:"どちらを知りたいですか？", left:"同じ患者", right:"エビデンス",
     next:{left:"patientlist", right:"evidence"} },
-  notpatient: { question:"あなたは？", left:"それ以外", right:"家族",
+  notpatient: { q:"あなたは？", left:"それ以外", right:"家族",
     next:{left:"other", right:"family"} },
-  family: { question:"何を知りたいですか？", left:"生存率", right:"治療法",
+  family: { q:"何を知りたいですか？", left:"生存率", right:"治療法",
     next:{left:"survival", right:"treatment"} },
-  other: { question:"あなたは？", left:"それ以外", right:"研究者",
+  other: { q:"あなたは？", left:"それ以外", right:"研究者",
     next:{left:"contact", right:"contact"} }
 };
 
-// 最終ビューのHTML
+// 最終結果HTML
 const results = {
   evidence: "<h2>エビデンスリスト</h2><ul><li>治療法Aの論文</li><li>治療法Bの統計</li></ul>",
   patientlist: "<h2>患者リスト</h2><ul><li>50代男性・肺がん</li><li>40代女性・乳がん</li></ul>",
   treatment: "<h2>治療法リスト</h2><ul><li>手術療法</li><li>抗がん剤療法</li><li>免疫療法</li></ul>",
   survival: "<h2>がん種ごとの生存率</h2><ul><li>肺がん：5年生存率 30%</li><li>乳がん：5年生存率 90%</li></ul>",
   contact: `<h2>お問い合わせフォーム</h2>
-      <form>
-        <input type="text" placeholder="お名前">
-        <input type="email" placeholder="メールアドレス">
-        <textarea placeholder="お問い合わせ内容"></textarea>
-        <button type="submit">送信</button>
-      </form>`
+    <form>
+      <input type="text" placeholder="お名前">
+      <input type="email" placeholder="メールアドレス">
+      <textarea placeholder="お問い合わせ内容"></textarea>
+      <button type="submit">送信</button>
+    </form>`
 };
 
 let currentNode = "start";
@@ -146,7 +160,7 @@ function createCard(nodeKey) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <div class="card-question">${data.question}</div>
+    <div class="card-question">${data.q}</div>
     <div class="card-options">
       <div class="left-option">← ${data.left}</div>
       <div class="right-option">${data.right} →</div>
@@ -165,10 +179,15 @@ function createCard(nodeKey) {
     if(!dragging) return;
     currentX = e.touches[0].clientX - startX;
     card.style.transform = `translateX(${currentX}px) rotate(${currentX*0.05}deg)`;
+
+    card.classList.remove('swipe-left','swipe-right');
+    if(currentX>30) card.classList.add('swipe-right');
+    else if(currentX<-30) card.classList.add('swipe-left');
   });
 
   card.addEventListener('touchend', e => {
     dragging = false;
+    card.classList.remove('swipe-left','swipe-right');
     if(Math.abs(currentX) > 100){
       let direction = currentX > 0 ? 'right' : 'left';
       let nextNode = data.next[direction];
@@ -187,7 +206,6 @@ function createCard(nodeKey) {
 }
 
 function handleNext(nodeKey){
-  // 最終結果ならビュー表示
   if(results[nodeKey]){
     showFinal(results[nodeKey]);
   } else {
@@ -201,7 +219,7 @@ function showFinal(html){
   document.getElementById("final-content").innerHTML = html;
 }
 
-// 1秒後に1stビューをフェードアウト
+// 初期表示
 setTimeout(() => {
   document.getElementById("view1").classList.add("fade-out");
   setTimeout(() => {
