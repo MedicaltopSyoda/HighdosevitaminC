@@ -1,50 +1,115 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ログイン - がん患者支援プラットフォーム</title>
-  <style>
-    body { font-family:sans-serif; background:#f0f0f0; margin:0; }
-    .login-container {
-      max-width: 400px; margin: 5rem auto; background: #fff;
-      padding: 2rem; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    label { display: block; margin-top: 1rem; }
-    input { width: 100%; padding: 0.5rem; }
-    button {
-      margin-top: 1rem; padding: 0.7rem; width: 100%;
-      background: #006699; color: #fff; border: none; cursor: pointer;
-    }
-    button:hover { background: #005080; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>がん情報アプリ</title>
+<style>
+  body {
+    margin: 0;
+    font-family: "Arial", sans-serif;
+    background: #fff;
+    overflow: hidden;
+  }
+  .view {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0; left: 0;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    transition: opacity 0.5s;
+  }
+  .view.active {
+    display: flex;
+    opacity: 1;
+  }
+  .fade-out {
+    opacity: 0;
+  }
+  .btn {
+    margin: 10px;
+    padding: 15px 30px;
+    background: #e91e63;
+    color: white;
+    font-size: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
-  <div class="login-container">
-    <h2>ログイン</h2>
-    <label>ユーザー名
-      <input type="text" id="username" />
-    </label>
-    <label>パスワード
-      <input type="password" id="password" />
-    </label>
-    <button onclick="login()">ログイン</button>
-    <div id="error" style="color:red;margin-top:1rem;"></div>
+
+<!-- 1stビュー -->
+<div class="view active" id="view1" style="background:#fff; color:#e91e63; font-size:24px;">
+  がんの情報のすべてがここにある
+</div>
+
+<!-- 2ndビュー -->
+<div class="view" id="view2">
+  <h2>あなたはがん患者ですか？</h2>
+  <div style="display:flex; gap:20px;">
+    <div class="btn" onclick="showNext('patient')">はい</div>
+    <div class="btn" onclick="showNext('notpatient')">いいえ</div>
   </div>
+</div>
 
-  <script>
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
+<!-- 3rdビュー（はいの場合） -->
+<div class="view" id="view3-patient">
+  <h2>どちらを知りたいですか？</h2>
+  <div class="btn">エビデンスが見たい</div>
+  <div class="btn">同じ患者を知りたい</div>
+</div>
 
-      // 簡易判定：ユーザー名「user」、パスワード「pass」のみOK
-      if(user === "user" && pass === "pass"){
-        // ログイン成功したらメインページへ
-        window.location.href = "main.html"; // ここに本体のファイル名
-      } else {
-        document.getElementById("error").textContent = "ユーザー名またはパスワードが違います";
-      }
-    }
-  </script>
+<!-- 3rdビュー（いいえの場合） -->
+<div class="view" id="view3-notpatient">
+  <h2>あなたは？</h2>
+  <div class="btn" onclick="showNext('family')">家族である</div>
+  <div class="btn" onclick="showNext('other')">それ以外</div>
+</div>
+
+<!-- 4thビュー（家族の場合） -->
+<div class="view" id="view4-family">
+  <h2>何を知りたいですか？</h2>
+  <div class="btn">治療法を調べる</div>
+  <div class="btn">生存率を調べる</div>
+</div>
+
+<!-- 4thビュー（それ以外の場合） -->
+<div class="view" id="view4-other">
+  <h2>あなたは？</h2>
+  <div class="btn">研究者である</div>
+  <div class="btn">それ以外</div>
+</div>
+
+<script>
+  // 1秒後に1stビューをフェードアウト
+  setTimeout(() => {
+    document.getElementById("view1").classList.add("fade-out");
+    setTimeout(() => {
+      showView("view2");
+    }, 500);
+  }, 1000);
+
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => {
+      v.classList.remove('active');
+    });
+    const view = document.getElementById(id);
+    view.classList.add('active');
+    view.classList.remove('fade-out');
+  }
+
+  function showNext(type) {
+    if(type === 'patient') showView('view3-patient');
+    if(type === 'notpatient') showView('view3-notpatient');
+    if(type === 'family') showView('view4-family');
+    if(type === 'other') showView('view4-other');
+  }
+</script>
+
 </body>
 </html>
