@@ -3,22 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tinder風がん情報アプリ（検索・フィルタ付）</title>
+<title>Tinder風がん情報アプリ（エビデンス&生存率カード対応）</title>
 <style>
-  body{
-    margin:0;font-family:Arial,system-ui,-apple-system; background:#f8f8f8;
-    overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;
-  }
+  body{margin:0;font-family:Arial,system-ui,-apple-system;background:#f8f8f8;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh}
   .view{display:none;position:absolute;width:100vw;height:100vh;justify-content:center;align-items:center;flex-direction:column;text-align:center;transition:opacity .5s}
   .view.active{display:flex}
   .fade-out{opacity:0}
 
-  /* Tinderカード */
-  .card{
-    position:absolute;width:80vw;max-width:360px;height:62vh;background:#fff;border-radius:16px;
-    box-shadow:0 4px 16px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:space-between;
-    padding:20px;user-select:none;transition:transform .3s ease,opacity .3s ease
-  }
+  /* Tinderカード（質問） */
+  .card{position:absolute;width:80vw;max-width:360px;height:62vh;background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:space-between;padding:20px;user-select:none;transition:transform .3s ease,opacity .3s ease}
   .card-question{flex:1;display:flex;justify-content:center;align-items:center;font-size:22px;font-weight:bold;text-align:center}
   .card-options{display:flex;justify-content:space-between;font-size:18px;margin-top:20px}
   .left-option{color:#e91e63}.right-option{color:#2196f3}
@@ -26,39 +19,16 @@
   .card.swipe-left::before{background:rgba(233,30,99,.12)} .card.swipe-right::before{background:rgba(33,150,243,.12)}
 
   /* 最終ビュー共通 */
-  .final-wrap{
-    background:#fff;padding:12px 12px 16px;width:96vw;max-width:560px;max-height:90vh;border-radius:12px;
-    box-shadow:0 6px 18px rgba(0,0,0,.2);overflow:auto;text-align:left
-  }
+  .final-wrap{background:#fff;padding:12px 12px 16px;width:96vw;max-width:600px;max-height:90vh;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.2);overflow:auto;text-align:left}
   .final-wrap h2{margin:6px 0 10px;font-size:20px}
 
-  /* 患者リスト：フィルタ */
-  .filters{
-    position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;border-radius:12px 12px 0 0;
-    z-index:2;padding:8px
-  }
-  .filters .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-  .filters .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
-  .filters input,.filters select{
-    width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px
-  }
-  .filters .actions{display:flex;gap:8px}
-  .btn{
-    padding:10px;border:none;border-radius:8px;font-size:14px
-  }
-  .btn-primary{background:#2196f3;color:#fff}.btn-ghost{background:#f3f3f3}
-  .count{font-size:12px;color:#555;margin:4px 0 0 2px}
-
-  /* 患者カードグリッド */
+  /* グリッド＆カード（患者/治療/エビデンス/生存率 共通スタイル） */
   .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
-  .p-card{
-    background:#fff;border:1px solid #eee;border-radius:12px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);
-    display:flex;flex-direction:column;gap:6px
-  }
-  .p-card h3{margin:0;font-size:16px;line-height:1.3}
-  .p-meta{font-size:12px;color:#555;line-height:1.4}
-  .p-tag{display:inline-block;font-size:11px;background:#f3f6fc;border:1px solid #e2e8f5;padding:2px 6px;border-radius:999px;margin-right:6px}
-  .p-card button{margin-top:6px;width:100%;padding:8px;font-size:14px;border:none;border-radius:8px;background:#2196f3;color:#fff}
+  .x-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:6px}
+  .x-card h3{margin:0;font-size:16px;line-height:1.3}
+  .x-meta{font-size:12px;color:#555;line-height:1.4}
+  .x-tag{display:inline-block;font-size:11px;background:#f3f6fc;border:1px solid #e2e8f5;padding:2px 6px;border-radius:999px;margin-right:6px}
+  .x-card button{margin-top:6px;width:100%;padding:8px;font-size:14px;border:none;border-radius:8px;background:#2196f3;color:#fff}
 
   /* 詳細 */
   .detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -66,10 +36,15 @@
   .detail-box{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px;margin:10px 0}
   .cta{width:100%;padding:12px;font-size:16px;background:#e91e63;color:#fff;border:none;border-radius:8px}
 
-  /* 問い合わせフォーム */
-  form{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-  input,textarea{width:100%;box-sizing:border-box;padding:10px;font-size:16px;border:1px solid #ddd;border-radius:8px}
-  .submit{background:#2196f3;color:#fff;border:none;border-radius:8px;padding:12px;font-size:16px}
+  /* 患者フィルタ（既存） */
+  .filters{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;border-radius:12px 12px 0 0;z-index:2;padding:8px}
+  .filters .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  .filters .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+  .filters input,.filters select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+  .filters .actions{display:flex;gap:8px}
+  .btn{padding:10px;border:none;border-radius:8px;font-size:14px}
+  .btn-primary{background:#2196f3;color:#fff}.btn-ghost{background:#f3f3f3}
+  .count{font-size:12px;color:#555;margin:4px 0 0 2px}
 </style>
 </head>
 <body>
@@ -82,7 +57,7 @@
 <!-- Tinderカード -->
 <div class="view" id="card-container"></div>
 
-<!-- 最終ビュー（リスト・詳細・フォーム等表示） -->
+<!-- 最終ビュー（一覧・詳細・フォーム等） -->
 <div class="view" id="final-view">
   <div class="final-wrap" id="final-content"></div>
 </div>
@@ -90,37 +65,57 @@
 <script>
 /* ===== 分岐定義 ===== */
 const flow = {
-  start:   { q:"あなたはがん患者ですか？", left:"いいえ",   right:"はい",   next:{ left:"notpatient", right:"patient" } },
-  patient: { q:"どちらを知りたいですか？", left:"同じ患者", right:"エビデンス", next:{ left:"patientlist", right:"evidence" } },
-  notpatient:{ q:"あなたは？", left:"それ以外", right:"家族", next:{ left:"other", right:"family" } },
-  family:  { q:"何を知りたいですか？", left:"生存率", right:"治療法", next:{ left:"survival", right:"treatment" } },
-  other:   { q:"あなたは？", left:"それ以外", right:"研究者", next:{ left:"contact", right:"contact" } }
+  start:     { q:"あなたはがん患者ですか？", left:"いいえ",   right:"はい",     next:{ left:"notpatient", right:"patient" } },
+  patient:   { q:"どちらを知りたいですか？", left:"同じ患者", right:"エビデンス", next:{ left:"patientlist", right:"evidence" } },
+  notpatient:{ q:"あなたは？",               left:"それ以外", right:"家族",     next:{ left:"other", right:"family" } },
+  family:    { q:"何を知りたいですか？",     left:"生存率",   right:"治療法",   next:{ left:"survival", right:"treatment" } },
+  other:     { q:"あなたは？",               left:"それ以外", right:"研究者",   next:{ left:"contact", right:"contact" } }
 };
 
-/* ===== ダミーデータ（患者） ===== */
+/* ===== データ ===== */
+/* 患者（既存） */
 const patients = [
-  { id:1,  sex:"男性", age:55, cancer:"肺がん",     stage:"Stage IIIA", years:2.0, city:"東京",  summary:"手術＋化学放射線療法後、分子標的薬を継続中。副作用マネジメントに関心。", contact:"patient1@example.com" },
-  { id:2,  sex:"女性", age:42, cancer:"乳がん",     stage:"Stage IIB",  years:1.5, city:"横浜",  summary:"術前化学療法→乳房温存→放射線。仕事と治療の両立の情報交換を希望。", contact:"patient2@example.com" },
-  { id:3,  sex:"男性", age:68, cancer:"前立腺がん", stage:"Stage IV",   years:3.0, city:"名古屋",summary:"ホルモン療法と放射線を併用。運動・栄養の工夫も共有可能。", contact:"patient3@example.com" },
-  { id:4,  sex:"女性", age:50, cancer:"大腸がん",   stage:"Stage III",  years:2.5, city:"大阪",  summary:"腹腔鏡手術後の補助化学療法。再発不安との向き合い方に関心。", contact:"patient4@example.com" },
-  { id:5,  sex:"男性", age:60, cancer:"胃がん",     stage:"Stage II",   years:1.2, city:"札幌",  summary:"幽門側胃切除後の補助療法。食事コントロールの経験共有。", contact:"patient5@example.com" },
-  { id:6,  sex:"女性", age:35, cancer:"卵巣がん",   stage:"Stage III",  years:2.8, city:"福岡",  summary:"術後化学療法。妊孕性と治療の両立の情報が欲しい方へ。", contact:"patient6@example.com" }
+  { id:1,sex:"男性",age:55,cancer:"肺がん",stage:"Stage IIIA",years:2.0,city:"東京",  summary:"手術＋化学放射線療法後、分子標的薬を継続中。副作用マネジメントに関心。", contact:"patient1@example.com" },
+  { id:2,sex:"女性",age:42,cancer:"乳がん",stage:"Stage IIB", years:1.5,city:"横浜",  summary:"術前化学療法→乳房温存→放射線。仕事と治療の両立の情報交換を希望。", contact:"patient2@example.com" },
+  { id:3,sex:"男性",age:68,cancer:"前立腺がん",stage:"Stage IV", years:3.0,city:"名古屋",summary:"ホルモン療法と放射線を併用。運動・栄養の工夫も共有可能。", contact:"patient3@example.com" },
+  { id:4,sex:"女性",age:50,cancer:"大腸がん",stage:"Stage III", years:2.5,city:"大阪",  summary:"腹腔鏡手術後の補助化学療法。再発不安との向き合い方に関心。", contact:"patient4@example.com" }
+];
+/* 治療法（既存） */
+const treatments = [
+  { id:101, name:"手術療法", type:"外科", indication:"局所制御が可能な固形腫瘍", level:"推奨度A（例）", summary:"腫瘍の外科的切除。早期がんでは根治を目指す主要選択肢。", risks:"出血・感染・術後合併症", cost:"目安: 30-150万円", duration:"1日〜数週間（入院含む）", tags:["根治目的","局所治療"] },
+  { id:102, name:"化学療法", type:"薬物", indication:"進行・再発例、補助療法", level:"推奨度A〜B（例）", summary:"抗がん剤を用いた全身治療。レジメンにより効果と副作用が異なる。", risks:"骨髄抑制・悪心嘔吐・脱毛など", cost:"月10-50万円目安", duration:"3〜6ヶ月を1単位", tags:["全身治療","標準治療"] },
+  { id:103, name:"放射線療法", type:"局所", indication:"局所制御・術前/術後補助", level:"推奨度A（例）", summary:"高エネルギー線で腫瘍細胞を破壊。定位照射や強度変調など手法多様。", risks:"皮膚炎・粘膜炎・臓器特異副作用", cost:"総額30-100万円", duration:"1〜6週間", tags:["局所治療","外来可"] },
+  { id:104, name:"免疫チェックポイント阻害薬", type:"薬物", indication:"適応遺伝子/バイオマーカー陽性例", level:"推奨度A〜B（例）", summary:"免疫反応を活性化して腫瘍を攻撃。長期奏効例も。", risks:"免疫関連有害事象（肝炎・肺炎など）", cost:"月30-150万円目安", duration:"長期継続可", tags:["全身治療","バイオマーカー"] },
+  { id:105, name:"分子標的治療", type:"薬物", indication:"特定遺伝子変異陽性", level:"推奨度A（例）", summary:"腫瘍の分子異常を狙い撃ち。高い奏効が期待できる。", risks:"皮疹・下痢・肝機能障害など", cost:"月20-120万円目安", duration:"長期継続可", tags:["全身治療","精密医療"] }
+];
+/* エビデンス（新規：カード＆詳細） */
+const evidences = [
+  { id:201, title:"III期大腸がんの術後補助化学療法", type:"RCT/多施設", cancer:"大腸がん", year:2023, outcome:"無再発生存（DFS）改善 HR=0.78", level:"エビデンスレベルA",
+    summary:"手術後補助化学療法の有効性を検証。再発抑制効果を示唆。高齢層でも有効性は維持。",
+    link:"#（DOIやPubMedなど）" },
+  { id:202, title:"免疫CP阻害薬の長期成績（PD-L1陽性）", type:"メタ解析", cancer:"非小細胞肺がん", year:2024, outcome:"全生存（OS）延長 HR=0.72", level:"エビデンスレベルA",
+    summary:"PD-L1高発現例で免疫療法群が化学療法群を上回る長期生存を示した。",
+    link:"#（DOIやPubMedなど）" },
+  { id:203, title:"術前化学療法 vs 直手術（HER2陰性乳がん）", type:"RCT", cancer:"乳がん", year:2022, outcome:"pCR向上 OR=1.9", level:"エビデンスレベルB",
+    summary:"術前化学療法で病理学的完全奏効率が有意に上昇。腫瘍縮小により温存率も改善。",
+    link:"#（DOIやPubMedなど）" }
+];
+/* 生存率（新規：カード＆詳細） */
+const survivals = [
+  { id:301, cancer:"肺がん", stage:"全体", one:55, three:38, five:30, source:"国内がん登録（例）2020" },
+  { id:302, cancer:"乳がん", stage:"全体", one:95, three:92, five:90, source:"国内がん登録（例）2020" },
+  { id:303, cancer:"大腸がん", stage:"全体", one:90, three:80, five:70, source:"国内がん登録（例）2020" }
 ];
 
-/* ===== 固定リソース ===== */
-const staticResults = {
-  evidence: "<h2>エビデンスリスト</h2><ul><li>治療法A：ランダム化比較試験（要約）</li><li>治療法B：システマティックレビュー（要約）</li></ul>",
-  treatment:"<h2>治療法リスト</h2><ul><li>手術療法</li><li>化学療法</li><li>放射線療法</li><li>免疫療法</li><li>分子標的療法</li></ul>",
-  survival:"<h2>がん種ごとの生存率</h2><ul><li>肺がん：5年生存率 30%（例）</li><li>乳がん：90%（例）</li><li>大腸がん：70%（例）</li></ul>",
-  contact:`<h2>お問い合わせ</h2>
-    <p>ご用件をお知らせください。担当よりご連絡いたします。</p>
-    <form onsubmit="event.preventDefault(); alert('送信しました');">
-      <input type="text" placeholder="お名前" required>
-      <input type="email" placeholder="メールアドレス" required>
-      <textarea rows="4" placeholder="お問い合わせ内容" required></textarea>
-      <button class="submit" type="submit">送信</button>
-    </form>`
-};
+/* ===== 固定（問い合わせフォーム） ===== */
+const contactHTML = `<h2>お問い合わせ</h2>
+  <p>ご用件をお知らせください。担当よりご連絡いたします。</p>
+  <form onsubmit="event.preventDefault(); alert('送信しました');">
+    <input type="text" placeholder="お名前" required>
+    <input type="email" placeholder="メールアドレス" required>
+    <textarea rows="4" placeholder="お問い合わせ内容" required></textarea>
+    <button class="submit" type="submit">送信</button>
+  </form>`;
 
 /* ===== 画面制御 ===== */
 let currentNode="start";
@@ -128,7 +123,7 @@ const container=document.getElementById("card-container");
 const finalView=document.getElementById("final-view");
 const finalContent=document.getElementById("final-content");
 
-/* Tinderカード生成 */
+/* Tinderカード（質問）生成 */
 function createCard(nodeKey){
   const data=flow[nodeKey];
   const card=document.createElement("div");
@@ -141,17 +136,17 @@ function createCard(nodeKey){
     </div>`;
   container.appendChild(card);
 
-  let startX=0,dx=0,dragging=false;
-  card.addEventListener("touchstart",e=>{startX=e.touches[0].clientX;dragging=true;});
+  let startX=0,dx=0,drag=false;
+  card.addEventListener("touchstart",e=>{startX=e.touches[0].clientX;drag=true;});
   card.addEventListener("touchmove",e=>{
-    if(!dragging) return;
+    if(!drag) return;
     dx=e.touches[0].clientX-startX;
     card.style.transform=`translateX(${dx}px) rotate(${dx*0.05}deg)`;
     card.classList.toggle("swipe-right",dx>30);
     card.classList.toggle("swipe-left",dx<-30);
   });
   card.addEventListener("touchend",()=>{
-    dragging=false; card.classList.remove("swipe-left","swipe-right");
+    drag=false; card.classList.remove("swipe-left","swipe-right");
     if(Math.abs(dx)>100){
       const dir=dx>0?"right":"left";
       const next=data.next[dir];
@@ -168,7 +163,10 @@ function createCard(nodeKey){
 /* 分岐先 */
 function handleNext(nodeKey){
   if(nodeKey==="patientlist"){ showPatientsList(); return; }
-  if(staticResults[nodeKey]){ showFinal(staticResults[nodeKey]); return; }
+  if(nodeKey==="treatment"){ showTreatmentsList(); return; }
+  if(nodeKey==="evidence"){ showEvidenceList(); return; }     // ← 追加
+  if(nodeKey==="survival"){ showSurvivalList(); return; }     // ← 追加
+  if(nodeKey==="contact"){ showFinal(contactHTML); return; }
   createCard(nodeKey);
 }
 
@@ -179,34 +177,23 @@ function showFinal(html){
   finalContent.innerHTML=html;
 }
 
-/* ====== 検索・フィルタ付 患者リスト ====== */
+/* ====== 患者：検索・フィルタ（既存） ====== */
 let currentFilters = { sex:"", cancer:"", stage:"", city:"", ageMin:"", ageMax:"", yearsMin:"", yearsMax:"", keyword:"" };
-
-function uniq(list, key){ return [...new Set(list.map(x=>x[key]))]; }
-
+function uniq(list,key){ return [...new Set(list.map(x=>x[key]))]; }
 function buildFilters(){
-  const sexOpts = ["", ...uniq(patients,"sex")];
-  const cancerOpts = ["", ...uniq(patients,"cancer")];
-  const stageOpts = ["", ...uniq(patients,"stage")];
-  const cityOpts = ["", ...uniq(patients,"city")];
-
+  const sexOpts=["",...uniq(patients,"sex")];
+  const cancerOpts=["",...uniq(patients,"cancer")];
+  const stageOpts=["",...uniq(patients,"stage")];
+  const cityOpts=["",...uniq(patients,"city")];
   return `
     <div class="filters">
       <div class="row">
-        <select id="f-sex">
-          ${sexOpts.map(v=>`<option value="${v}">${v||"性別"}</option>`).join("")}
-        </select>
-        <select id="f-cancer">
-          ${cancerOpts.map(v=>`<option value="${v}">${v||"がん種"}</option>`).join("")}
-        </select>
+        <select id="f-sex">${sexOpts.map(v=>`<option value="${v}">${v||"性別"}</option>`).join("")}</select>
+        <select id="f-cancer">${cancerOpts.map(v=>`<option value="${v}">${v||"がん種"}</option>`).join("")}</select>
       </div>
       <div class="row">
-        <select id="f-stage">
-          ${stageOpts.map(v=>`<option value="${v}">${v||"ステージ"}</option>`).join("")}
-        </select>
-        <select id="f-city">
-          ${cityOpts.map(v=>`<option value="${v}">${v||"地域"}</option>`).join("")}
-        </select>
+        <select id="f-stage">${stageOpts.map(v=>`<option value="${v}">${v||"ステージ"}</option>`).join("")}</select>
+        <select id="f-city">${cityOpts.map(v=>`<option value="${v}">${v||"地域"}</option>`).join("")}</select>
       </div>
       <div class="row3">
         <input id="f-ageMin" type="number" inputmode="numeric" placeholder="年齢Min">
@@ -224,7 +211,6 @@ function buildFilters(){
       <div class="count" id="result-count"></div>
     </div>`;
 }
-
 function applyFilters(list){
   const f=currentFilters;
   return list.filter(p=>{
@@ -232,12 +218,10 @@ function applyFilters(list){
     if(f.cancer && p.cancer!==f.cancer) return false;
     if(f.stage && p.stage!==f.stage) return false;
     if(f.city && p.city!==f.city) return false;
-
     if(f.ageMin!=="" && p.age < Number(f.ageMin)) return false;
     if(f.ageMax!=="" && p.age > Number(f.ageMax)) return false;
     if(f.yearsMin!=="" && p.years < Number(f.yearsMin)) return false;
     if(f.yearsMax!=="" && p.years > Number(f.yearsMax)) return false;
-
     if(f.keyword){
       const kw=f.keyword.trim().toLowerCase();
       const hay=[p.summary,p.city,p.cancer,p.stage,`${p.sex}`,`${p.age}`,`${p.years}`].join(" ").toLowerCase();
@@ -246,76 +230,48 @@ function applyFilters(list){
     return true;
   });
 }
-
 function renderPatients(list){
-  const gridHTML = `
-    <div class="cards-grid">
-      ${list.map(p=>`
-        <div class="p-card" onclick="showPatientDetail(${p.id})" role="button" tabindex="0">
-          <h3>${p.sex}・${p.age}歳</h3>
-          <div class="p-meta">${p.cancer}／${p.stage}</div>
-          <div class="p-meta">治療年数：${p.years}年</div>
-          <div><span class="p-tag">${p.city}</span><span class="p-tag">${p.cancer}</span></div>
-          <button type="button">詳細を見る</button>
-        </div>`).join("")}
-    </div>`;
-  return gridHTML;
+  return `<div class="cards-grid">${
+    list.map(p=>`
+      <div class="x-card" onclick="showPatientDetail(${p.id})" role="button" tabindex="0">
+        <h3>${p.sex}・${p.age}歳</h3>
+        <div class="x-meta">${p.cancer}／${p.stage}</div>
+        <div class="x-meta">治療年数：${p.years}年</div>
+        <div><span class="x-tag">${p.city}</span><span class="x-tag">${p.cancer}</span></div>
+        <button type="button">詳細を見る</button>
+      </div>`).join("")
+  }</div>`;
 }
-
 function attachFilterEvents(){
-  const get = id=>document.getElementById(id);
+  const get=id=>document.getElementById(id);
   const ids=["f-sex","f-cancer","f-stage","f-city","f-ageMin","f-ageMax","f-yearsMin","f-yearsMax","f-keyword"];
-  ids.forEach(id=>{
-    const el=get(id);
-    el.value = currentFilters[id.replace("f-","")] ?? "";
-  });
-
+  ids.forEach(id=>{ const el=get(id); el.value=currentFilters[id.replace("f-","")] ?? ""; });
   function readFilters(){
-    currentFilters = {
-      sex:get("f-sex").value,
-      cancer:get("f-cancer").value,
-      stage:get("f-stage").value,
-      city:get("f-city").value,
-      ageMin:get("f-ageMin").value,
-      ageMax:get("f-ageMax").value,
-      yearsMin:get("f-yearsMin").value,
-      yearsMax:get("f-yearsMax").value,
+    currentFilters={
+      sex:get("f-sex").value,cancer:get("f-cancer").value,stage:get("f-stage").value,city:get("f-city").value,
+      ageMin:get("f-ageMin").value,ageMax:get("f-ageMax").value,yearsMin:get("f-yearsMin").value,yearsMax:get("f-yearsMax").value,
       keyword:get("f-keyword").value
     };
   }
-
   function update(){
     readFilters();
-    const result = applyFilters(patients);
-    get("result-count").textContent = `該当 ${result.length} 件`;
-    get("list-area").innerHTML = renderPatients(result);
+    const result=applyFilters(patients);
+    get("result-count").textContent=`該当 ${result.length} 件`;
+    get("list-area").innerHTML=renderPatients(result);
   }
-
   get("btn-apply").addEventListener("click",update);
-  get("btn-reset").addEventListener("click",()=>{
-    currentFilters = { sex:"", cancer:"", stage:"", city:"", ageMin:"", ageMax:"", yearsMin:"", yearsMax:"", keyword:"" };
-    update();
-  });
-
-  // 入力即時反映（モバイル負荷を抑えるため最低限）
+  get("btn-reset").addEventListener("click",()=>{ currentFilters={sex:"",cancer:"",stage:"",city:"",ageMin:"",ageMax:"",yearsMin:"",yearsMax:"",keyword:""}; update(); });
   ["f-sex","f-cancer","f-stage","f-city"].forEach(id=>document.getElementById(id).addEventListener("change",update));
 }
-
 function showPatientsList(){
   container.classList.remove("active");
   finalView.classList.add("active");
-  finalContent.innerHTML = `
-    ${buildFilters()}
-    <div id="list-area">${renderPatients(applyFilters(patients))}</div>
-  `;
-  document.getElementById("result-count").textContent = `該当 ${applyFilters(patients).length} 件`;
+  finalContent.innerHTML = `${buildFilters()}<div id="list-area">${renderPatients(applyFilters(patients))}</div>`;
+  document.getElementById("result-count").textContent=`該当 ${applyFilters(patients).length} 件`;
   attachFilterEvents();
 }
-
-/* ===== 詳細・連絡 ===== */
 window.showPatientDetail = function(id){
-  const p = patients.find(x=>x.id===id);
-  if(!p) return;
+  const p=patients.find(x=>x.id===id); if(!p) return;
   finalContent.innerHTML = `
     <div class="detail-head">
       <h2>患者詳細</h2>
@@ -331,8 +287,7 @@ window.showPatientDetail = function(id){
     <button class="cta" onclick="openContact('${p.contact}')">連絡する</button>
   `;
 };
-
-window.openContact = function(email){
+window.openContact=function(email){
   finalContent.innerHTML += `
     <div class="detail-box">
       <h3 style="margin:0 0 8px;">連絡フォーム</h3>
@@ -342,7 +297,133 @@ window.openContact = function(email){
         <textarea rows="4" placeholder="メッセージ（${email} 宛）" required></textarea>
         <button class="submit" type="submit">送信</button>
       </form>
+    </div>`;
+};
+
+/* ====== 治療法：一覧＆詳細 ====== */
+function renderTreatments(list){
+  return `<div class="cards-grid">${
+    list.map(t=>`
+      <div class="x-card" onclick="showTreatmentDetail(${t.id})" role="button" tabindex="0">
+        <h3>${t.name}</h3>
+        <div class="x-meta">${t.type}／適応：${t.indication}</div>
+        <div class="x-meta">推奨度：${t.level}</div>
+        <div>${t.tags.map(x=>`<span class="x-tag">${x}</span>`).join("")}</div>
+        <button type="button">詳細を見る</button>
+      </div>`).join("")
+  }</div>`;
+}
+function showTreatmentsList(){
+  container.classList.remove("active");
+  finalView.classList.add("active");
+  finalContent.innerHTML = `<h2>治療法リスト</h2>${renderTreatments(treatments)}`;
+}
+window.showTreatmentDetail = function(id){
+  const t=treatments.find(x=>x.id===id); if(!t) return;
+  finalContent.innerHTML = `
+    <div class="detail-head">
+      <h2>治療法詳細</h2>
+      <button class="back-link" onclick="showTreatmentsList()">← 一覧へ戻る</button>
     </div>
+    <div class="detail-box">
+      <div><strong>治療名：</strong>${t.name}</div>
+      <div><strong>分類：</strong>${t.type}</div>
+      <div><strong>適応：</strong>${t.indication}</div>
+      <div><strong>推奨度・エビデンス：</strong>${t.level}</div>
+    </div>
+    <p>${t.summary}</p>
+    <div class="detail-box">
+      <div><strong>主なリスク・副作用：</strong>${t.risks}</div>
+      <div><strong>治療期間：</strong>${t.duration}</div>
+      <div><strong>費用目安：</strong>${t.cost}</div>
+    </div>
+    <button class="cta" onclick="openFacilityContact('${t.name}')">医療機関に問い合わせ</button>
+  `;
+};
+window.openFacilityContact=function(tName){
+  finalContent.innerHTML += `
+    <div class="detail-box">
+      <h3 style="margin:0 0 8px;">治療法に関するお問い合わせ</h3>
+      <form onsubmit="event.preventDefault(); alert('お問い合わせを送信しました'); showTreatmentsList();">
+        <input type="text" placeholder="お名前" required>
+        <input type="email" placeholder="メールアドレス" required>
+        <textarea rows="4" placeholder="『${tName}』について質問・相談事項" required></textarea>
+        <button class="submit" type="submit">送信</button>
+      </form>
+    </div>`;
+};
+
+/* ====== エビデンス：一覧＆詳細（新規） ====== */
+function renderEvidences(list){
+  return `<div class="cards-grid">${
+    list.map(e=>`
+      <div class="x-card" onclick="showEvidenceDetail(${e.id})" role="button" tabindex="0">
+        <h3>${e.title}</h3>
+        <div class="x-meta">${e.type}／${e.cancer}／${e.year}年</div>
+        <div class="x-meta">主要所見：${e.outcome}</div>
+        <div><span class="x-tag">${e.level}</span><span class="x-tag">${e.cancer}</span></div>
+        <button type="button">詳細を見る</button>
+      </div>`).join("")
+  }</div>`;
+}
+function showEvidenceList(){
+  container.classList.remove("active");
+  finalView.classList.add("active");
+  finalContent.innerHTML = `<h2>エビデンスリスト</h2>${renderEvidences(evidences)}`;
+}
+window.showEvidenceDetail = function(id){
+  const e=evidences.find(x=>x.id===id); if(!e) return;
+  finalContent.innerHTML = `
+    <div class="detail-head">
+      <h2>エビデンス詳細</h2>
+      <button class="back-link" onclick="showEvidenceList()">← 一覧へ戻る</button>
+    </div>
+    <div class="detail-box">
+      <div><strong>タイトル：</strong>${e.title}</div>
+      <div><strong>デザイン：</strong>${e.type}</div>
+      <div><strong>対象がん種：</strong>${e.cancer}</div>
+      <div><strong>発表年：</strong>${e.year}年</div>
+      <div><strong>主要所見：</strong>${e.outcome}</div>
+      <div><strong>エビデンスレベル：</strong>${e.level}</div>
+    </div>
+    <p>${e.summary}</p>
+    <div class="detail-box"><strong>出典：</strong>${e.link}</div>
+    <button class="cta" onclick="openFacilityContact('エビデンス相談')">このエビデンスを元に相談する</button>
+  `;
+};
+
+/* ====== 生存率：一覧＆詳細（新規） ====== */
+function renderSurvivals(list){
+  return `<div class="cards-grid">${
+    list.map(s=>`
+      <div class="x-card" onclick="showSurvivalDetail(${s.id})" role="button" tabindex="0">
+        <h3>${s.cancer}（${s.stage}）</h3>
+        <div class="x-meta">1年: ${s.one}% ／ 3年: ${s.three}% ／ 5年: ${s.five}%</div>
+        <div><span class="x-tag">統計</span><span class="x-tag">${s.cancer}</span></div>
+        <button type="button">詳細を見る</button>
+      </div>`).join("")
+  }</div>`;
+}
+function showSurvivalList(){
+  container.classList.remove("active");
+  finalView.classList.add("active");
+  finalContent.innerHTML = `<h2>がん種ごとの生存率</h2>${renderSurvivals(survivals)}`;
+}
+window.showSurvivalDetail = function(id){
+  const s=survivals.find(x=>x.id===id); if(!s) return;
+  finalContent.innerHTML = `
+    <div class="detail-head">
+      <h2>生存率詳細</h2>
+      <button class="back-link" onclick="showSurvivalList()">← 一覧へ戻る</button>
+    </div>
+    <div class="detail-box">
+      <div><strong>がん種：</strong>${s.cancer}</div>
+      <div><strong>ステージ：</strong>${s.stage}</div>
+      <div><strong>1年：</strong>${s.one}%　<strong>3年：</strong>${s.three}%　<strong>5年：</strong>${s.five}%</div>
+      <div><strong>出典：</strong>${s.source}</div>
+    </div>
+    <p>数値は統計の例示です。患者さん個々の背景により変動します。具体的な治療選択は主治医とご相談ください。</p>
+    <button class="cta" onclick="openFacilityContact('${s.cancer} 生存率相談')">このがんの治療相談をする</button>
   `;
 };
 
