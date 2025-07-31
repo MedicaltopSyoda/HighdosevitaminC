@@ -30,7 +30,7 @@
     display: flex;
   }
   .fade-out { opacity: 0; }
-  
+
   /* カードスタイル */
   .card {
     position: absolute;
@@ -41,15 +41,29 @@
     border-radius: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 24px;
-    font-weight: bold;
-    text-align: center;
+    flex-direction: column;
+    justify-content: space-between;
     padding: 20px;
     user-select: none;
     transition: transform 0.3s ease, opacity 0.3s ease;
   }
+  .card-question {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .card-options {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    margin-top: 20px;
+  }
+  .left-option { color: #e91e63; }   /* 左スワイプ色 */
+  .right-option { color: #2196f3; }  /* 右スワイプ色 */
 </style>
 </head>
 <body>
@@ -64,20 +78,26 @@
 
 <script>
 const cardsData = [
-  {text:"あなたはがん患者ですか？\n右スワイプ：はい\n左スワイプ：いいえ", right:"patient", left:"notpatient"},
-  {text:"(患者) どちらを知りたいですか？\n右：エビデンス\n左：同じ患者", right:"evidence", left:"peer"},
-  {text:"(非患者) あなたは？\n右：家族\n左：それ以外", right:"family", left:"other"},
-  {text:"(家族) 何を知りたいですか？\n右：治療法\n左：生存率", right:"treatment", left:"survival"},
-  {text:"(その他) あなたは？\n右：研究者\n左：それ以外", right:"researcher", left:"general"}
+  {question:"あなたはがん患者ですか？", left:"いいえ", right:"はい"},
+  {question:"(患者) どちらを知りたいですか？", left:"同じ患者", right:"エビデンス"},
+  {question:"(非患者) あなたは？", left:"それ以外", right:"家族"},
+  {question:"(家族) 何を知りたいですか？", left:"生存率", right:"治療法"},
+  {question:"(その他) あなたは？", left:"それ以外", right:"研究者"}
 ];
 
 let currentCardIndex = 0;
 let container = document.getElementById("card-container");
 
-function createCard(text) {
+function createCard(data) {
   const card = document.createElement('div');
   card.className = 'card';
-  card.innerText = text;
+  card.innerHTML = `
+    <div class="card-question">${data.question}</div>
+    <div class="card-options">
+      <div class="left-option">← ${data.left}</div>
+      <div class="right-option">${data.right} →</div>
+    </div>
+  `;
   container.appendChild(card);
 
   let startX = 0, currentX = 0;
@@ -105,19 +125,22 @@ function createCard(text) {
         nextCard(direction);
       }, 300);
     }else{
-      card.style.transform = `translateX(0)`;
+      card.style.transform = `translateX(0) rotate(0deg)`;
     }
     currentX = 0;
   });
 }
 
-// カードを順番に表示
 function nextCard(direction){
-  console.log("選択:", direction, cardsData[currentCardIndex]?.[direction]);
+  // 選択結果のログ（今はconsoleに出すだけ）
+  if(direction) {
+    const choice = cardsData[currentCardIndex][direction];
+    console.log(`選択: ${choice}`);
+  }
 
   currentCardIndex++;
   if(currentCardIndex < cardsData.length){
-    createCard(cardsData[currentCardIndex].text);
+    createCard(cardsData[currentCardIndex]);
   } else {
     alert("カードはすべて終了しました");
   }
@@ -129,7 +152,7 @@ setTimeout(() => {
   setTimeout(() => {
     document.getElementById("view1").style.display = "none";
     document.getElementById("card-container").classList.add("active");
-    createCard(cardsData[currentCardIndex].text);
+    createCard(cardsData[currentCardIndex]);
   }, 500);
 }, 1000);
 </script>
