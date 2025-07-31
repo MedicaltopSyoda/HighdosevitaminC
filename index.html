@@ -3,21 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>がん情報アプリ</title>
+<title>Tinder風がん情報アプリ</title>
 <style>
   body {
     margin: 0;
     font-family: "Arial", sans-serif;
-    background: #fff;
+    background: #f8f8f8;
     overflow: hidden;
-    touch-action: pan-y;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
   }
   .view {
     display: none;
+    position: absolute;
     width: 100vw;
     height: 100vh;
-    position: absolute;
-    top: 0; left: 0;
     justify-content: center;
     align-items: center;
     flex-direction: column;
@@ -26,11 +28,28 @@
   }
   .view.active {
     display: flex;
-    opacity: 1;
   }
   .fade-out { opacity: 0; }
-  h2 { font-size: 24px; margin: 20px; }
-  .hint { font-size: 16px; color: #888; margin-top: 30px; }
+  
+  /* カードスタイル */
+  .card {
+    position: absolute;
+    width: 80vw;
+    max-width: 350px;
+    height: 60vh;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+    user-select: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
 </style>
 </head>
 <body>
@@ -40,84 +59,79 @@
   がんの情報のすべてがここにある
 </div>
 
-<!-- 2ndビュー -->
-<div class="view" id="view2">
-  <h2>あなたはがん患者ですか？</h2>
-  <div class="hint">右スワイプ：はい　／　左スワイプ：いいえ</div>
-</div>
-
-<!-- 3rdビュー（はいの場合） -->
-<div class="view" id="view3-patient">
-  <h2>どちらを知りたいですか？</h2>
-  <div class="hint">右スワイプ：エビデンス　／　左スワイプ：同じ患者</div>
-</div>
-
-<!-- 3rdビュー（いいえの場合） -->
-<div class="view" id="view3-notpatient">
-  <h2>あなたは？</h2>
-  <div class="hint">右スワイプ：家族　／　左スワイプ：それ以外</div>
-</div>
-
-<!-- 4thビュー（家族の場合） -->
-<div class="view" id="view4-family">
-  <h2>何を知りたいですか？</h2>
-  <div class="hint">右スワイプ：治療法　／　左スワイプ：生存率</div>
-</div>
-
-<!-- 4thビュー（それ以外の場合） -->
-<div class="view" id="view4-other">
-  <h2>あなたは？</h2>
-  <div class="hint">右スワイプ：研究者　／　左スワイプ：それ以外</div>
-</div>
+<!-- カードコンテナ -->
+<div class="view" id="card-container"></div>
 
 <script>
-let currentView = "view1";
+const cardsData = [
+  {text:"あなたはがん患者ですか？\n右スワイプ：はい\n左スワイプ：いいえ", right:"patient", left:"notpatient"},
+  {text:"(患者) どちらを知りたいですか？\n右：エビデンス\n左：同じ患者", right:"evidence", left:"peer"},
+  {text:"(非患者) あなたは？\n右：家族\n左：それ以外", right:"family", left:"other"},
+  {text:"(家族) 何を知りたいですか？\n右：治療法\n左：生存率", right:"treatment", left:"survival"},
+  {text:"(その他) あなたは？\n右：研究者\n左：それ以外", right:"researcher", left:"general"}
+];
+
+let currentCardIndex = 0;
+let container = document.getElementById("card-container");
+
+function createCard(text) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerText = text;
+  container.appendChild(card);
+
+  let startX = 0, currentX = 0;
+  let dragging = false;
+
+  card.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    dragging = true;
+  });
+
+  card.addEventListener('touchmove', e => {
+    if(!dragging) return;
+    currentX = e.touches[0].clientX - startX;
+    card.style.transform = `translateX(${currentX}px) rotate(${currentX*0.05}deg)`;
+  });
+
+  card.addEventListener('touchend', e => {
+    dragging = false;
+    if(Math.abs(currentX) > 100){
+      let direction = currentX > 0 ? 'right' : 'left';
+      card.style.transform = `translateX(${currentX>0?500:-500}px) rotate(${currentX*0.1}deg)`;
+      card.style.opacity = 0;
+      setTimeout(()=> {
+        container.removeChild(card);
+        nextCard(direction);
+      }, 300);
+    }else{
+      card.style.transform = `translateX(0)`;
+    }
+    currentX = 0;
+  });
+}
+
+// カードを順番に表示
+function nextCard(direction){
+  console.log("選択:", direction, cardsData[currentCardIndex]?.[direction]);
+
+  currentCardIndex++;
+  if(currentCardIndex < cardsData.length){
+    createCard(cardsData[currentCardIndex].text);
+  } else {
+    alert("カードはすべて終了しました");
+  }
+}
 
 // 1秒後に1stビューをフェードアウト
 setTimeout(() => {
   document.getElementById("view1").classList.add("fade-out");
-  setTimeout(() => { showView("view2"); }, 500);
+  setTimeout(() => {
+    document.getElementById("view1").style.display = "none";
+    document.getElementById("card-container").classList.add("active");
+    createCard(cardsData[currentCardIndex].text);
+  }, 500);
 }, 1000);
-
-function showView(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  currentView = id;
-}
-
-// スワイプ処理
-let startX = 0;
-document.addEventListener('touchstart', e => {
-  startX = e.changedTouches[0].clientX;
-});
-document.addEventListener('touchend', e => {
-  let endX = e.changedTouches[0].clientX;
-  let diffX = endX - startX;
-  if(Math.abs(diffX) > 50) { // スワイプ判定
-    if(diffX > 0) handleSwipe('right');
-    else handleSwipe('left');
-  }
-});
-
-function handleSwipe(dir) {
-  switch(currentView) {
-    case "view2":
-      showView(dir === 'right' ? "view3-patient" : "view3-notpatient");
-      break;
-    case "view3-patient":
-      alert(dir === 'right' ? "エビデンスが見たい" : "同じ患者を知りたい");
-      break;
-    case "view3-notpatient":
-      showView(dir === 'right' ? "view4-family" : "view4-other");
-      break;
-    case "view4-family":
-      alert(dir === 'right' ? "治療法を調べる" : "生存率を調べる");
-      break;
-    case "view4-other":
-      alert(dir === 'right' ? "研究者である" : "それ以外");
-      break;
-  }
-}
 </script>
 
 </body>
