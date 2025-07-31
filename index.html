@@ -64,6 +64,33 @@
   }
   .left-option { color: #e91e63; }   /* 左スワイプ色 */
   .right-option { color: #2196f3; }  /* 右スワイプ色 */
+
+  /* 5thビュー用 */
+  .final-view {
+    background:#fff;
+    padding:20px;
+    width:80vw;
+    max-width:400px;
+    border-radius:10px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.2);
+    text-align:left;
+  }
+  ul { padding-left:20px; }
+  form { display:flex; flex-direction:column; gap:10px; margin-top:15px; }
+  input,textarea {
+    padding:8px;
+    font-size:16px;
+    width:100%;
+    box-sizing:border-box;
+  }
+  button {
+    padding:10px;
+    background:#2196f3;
+    color:white;
+    border:none;
+    border-radius:5px;
+    font-size:16px;
+  }
 </style>
 </head>
 <body>
@@ -76,6 +103,11 @@
 <!-- カードコンテナ -->
 <div class="view" id="card-container"></div>
 
+<!-- 5thビュー（最終表示） -->
+<div class="view" id="final-view">
+  <div class="final-view" id="final-content"></div>
+</div>
+
 <script>
 const cardsData = [
   {question:"あなたはがん患者ですか？", left:"いいえ", right:"はい"},
@@ -85,6 +117,8 @@ const cardsData = [
   {question:"(その他) あなたは？", left:"それ以外", right:"研究者"}
 ];
 
+// 選択履歴を保存
+let choices = [];
 let currentCardIndex = 0;
 let container = document.getElementById("card-container");
 
@@ -118,11 +152,12 @@ function createCard(data) {
     dragging = false;
     if(Math.abs(currentX) > 100){
       let direction = currentX > 0 ? 'right' : 'left';
+      choices.push(cardsData[currentCardIndex][direction]);
       card.style.transform = `translateX(${currentX>0?500:-500}px) rotate(${currentX*0.1}deg)`;
       card.style.opacity = 0;
       setTimeout(()=> {
         container.removeChild(card);
-        nextCard(direction);
+        nextCard();
       }, 300);
     }else{
       card.style.transform = `translateX(0) rotate(0deg)`;
@@ -131,19 +166,46 @@ function createCard(data) {
   });
 }
 
-function nextCard(direction){
-  // 選択結果のログ（今はconsoleに出すだけ）
-  if(direction) {
-    const choice = cardsData[currentCardIndex][direction];
-    console.log(`選択: ${choice}`);
-  }
-
+function nextCard(){
   currentCardIndex++;
   if(currentCardIndex < cardsData.length){
     createCard(cardsData[currentCardIndex]);
   } else {
-    alert("カードはすべて終了しました");
+    showFinalView();
   }
+}
+
+function showFinalView(){
+  document.getElementById("card-container").classList.remove("active");
+  document.getElementById("final-view").classList.add("active");
+
+  let lastChoice = choices[choices.length-1];
+  let content = "";
+  switch(lastChoice){
+    case "エビデンス":
+      content = "<h2>エビデンスリスト</h2><ul><li>治療法Aの論文</li><li>治療法Bの統計</li></ul>";
+      break;
+    case "同じ患者":
+      content = "<h2>患者リスト</h2><ul><li>50代男性・肺がん</li><li>40代女性・乳がん</li></ul>";
+      break;
+    case "治療法":
+      content = "<h2>治療法リスト</h2><ul><li>手術療法</li><li>抗がん剤療法</li><li>免疫療法</li></ul>";
+      break;
+    case "生存率":
+      content = "<h2>がん種ごとの生存率</h2><ul><li>肺がん：5年生存率 30%</li><li>乳がん：5年生存率 90%</li></ul>";
+      break;
+    case "研究者":
+    case "それ以外":
+      content = `<h2>お問い合わせフォーム</h2>
+        <form>
+          <input type="text" placeholder="お名前">
+          <input type="email" placeholder="メールアドレス">
+          <textarea placeholder="お問い合わせ内容"></textarea>
+          <button type="submit">送信</button>
+        </form>`;
+      break;
+  }
+  document.getElementById("final-content").innerHTML = content;
 }
 
 // 1秒後に1stビューをフェードアウト
