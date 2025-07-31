@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tinder風がん情報アプリ（エビデンス&生存率カード対応）</title>
+<title>Tinder風がん情報アプリ（患者ルートに相談分岐追加）</title>
 <style>
   body{margin:0;font-family:Arial,system-ui,-apple-system;background:#f8f8f8;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh}
   .view{display:none;position:absolute;width:100vw;height:100vh;justify-content:center;align-items:center;flex-direction:column;text-align:center;transition:opacity .5s}
@@ -22,7 +22,7 @@
   .final-wrap{background:#fff;padding:12px 12px 16px;width:96vw;max-width:600px;max-height:90vh;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.2);overflow:auto;text-align:left}
   .final-wrap h2{margin:6px 0 10px;font-size:20px}
 
-  /* グリッド＆カード（患者/治療/エビデンス/生存率 共通スタイル） */
+  /* グリッド＆カード（共通） */
   .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
   .x-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:6px}
   .x-card h3{margin:0;font-size:16px;line-height:1.3}
@@ -36,7 +36,7 @@
   .detail-box{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px;margin:10px 0}
   .cta{width:100%;padding:12px;font-size:16px;background:#e91e63;color:#fff;border:none;border-radius:8px}
 
-  /* 患者フィルタ（既存） */
+  /* 患者フィルタ */
   .filters{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;border-radius:12px 12px 0 0;z-index:2;padding:8px}
   .filters .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
   .filters .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
@@ -63,44 +63,63 @@
 </div>
 
 <script>
-/* ===== 分岐定義 ===== */
+/* ===== 分岐定義（患者ルートに新設問＋相談分岐を追加） =====
+   左スワイプ＝左の選択肢、右スワイプ＝右の選択肢 */
 const flow = {
-  start:     { q:"あなたはがん患者ですか？", left:"いいえ",   right:"はい",     next:{ left:"notpatient", right:"patient" } },
-  patient:   { q:"どちらを知りたいですか？", left:"同じ患者", right:"エビデンス", next:{ left:"patientlist", right:"evidence" } },
-  notpatient:{ q:"あなたは？",               left:"それ以外", right:"家族",     next:{ left:"other", right:"family" } },
-  family:    { q:"何を知りたいですか？",     left:"生存率",   right:"治療法",   next:{ left:"survival", right:"treatment" } },
-  other:     { q:"あなたは？",               left:"それ以外", right:"研究者",   next:{ left:"contact", right:"contact" } }
+  start:          { q:"あなたはがん患者ですか？", left:"いいえ",         right:"はい",
+                    next:{ left:"notpatient", right:"patientChoice" } },
+
+  // ★ 追加：患者ルートの最初の分岐
+  patientChoice:  { q:"どうしますか？", left:"情報を閲覧したい", right:"すぐ相談したい",
+                    next:{ left:"patientInfo", right:"consultChoice" } },
+
+  // 「情報を閲覧したい」→ 既存の質問へ
+  patientInfo:    { q:"どちらを知りたいですか？", left:"同じ患者",   right:"エビデンス",
+                    next:{ left:"patientlist", right:"evidence" } },
+
+  // 「すぐ相談したい」→ 通話 or AI相談
+  consultChoice:  { q:"ご希望はどちらですか？", left:"がんコンシェルジュと通話したい", right:"がん専門AIに相談したい",
+                    next:{ left:"concierge", right:"ai" } },
+
+  // 非患者ルート（既存）
+  notpatient:     { q:"あなたは？", left:"それ以外", right:"家族",
+                    next:{ left:"other", right:"family" } },
+  family:         { q:"何を知りたいですか？", left:"生存率", right:"治療法",
+                    next:{ left:"survival", right:"treatment" } },
+  other:          { q:"あなたは？", left:"それ以外", right:"研究者",
+                    next:{ left:"contact", right:"contact" } }
 };
 
 /* ===== データ ===== */
-/* 患者（既存） */
 const patients = [
   { id:1,sex:"男性",age:55,cancer:"肺がん",stage:"Stage IIIA",years:2.0,city:"東京",  summary:"手術＋化学放射線療法後、分子標的薬を継続中。副作用マネジメントに関心。", contact:"patient1@example.com" },
   { id:2,sex:"女性",age:42,cancer:"乳がん",stage:"Stage IIB", years:1.5,city:"横浜",  summary:"術前化学療法→乳房温存→放射線。仕事と治療の両立の情報交換を希望。", contact:"patient2@example.com" },
   { id:3,sex:"男性",age:68,cancer:"前立腺がん",stage:"Stage IV", years:3.0,city:"名古屋",summary:"ホルモン療法と放射線を併用。運動・栄養の工夫も共有可能。", contact:"patient3@example.com" },
   { id:4,sex:"女性",age:50,cancer:"大腸がん",stage:"Stage III", years:2.5,city:"大阪",  summary:"腹腔鏡手術後の補助化学療法。再発不安との向き合い方に関心。", contact:"patient4@example.com" }
 ];
-/* 治療法（既存） */
+
 const treatments = [
-  { id:101, name:"手術療法", type:"外科", indication:"局所制御が可能な固形腫瘍", level:"推奨度A（例）", summary:"腫瘍の外科的切除。早期がんでは根治を目指す主要選択肢。", risks:"出血・感染・術後合併症", cost:"目安: 30-150万円", duration:"1日〜数週間（入院含む）", tags:["根治目的","局所治療"] },
-  { id:102, name:"化学療法", type:"薬物", indication:"進行・再発例、補助療法", level:"推奨度A〜B（例）", summary:"抗がん剤を用いた全身治療。レジメンにより効果と副作用が異なる。", risks:"骨髄抑制・悪心嘔吐・脱毛など", cost:"月10-50万円目安", duration:"3〜6ヶ月を1単位", tags:["全身治療","標準治療"] },
-  { id:103, name:"放射線療法", type:"局所", indication:"局所制御・術前/術後補助", level:"推奨度A（例）", summary:"高エネルギー線で腫瘍細胞を破壊。定位照射や強度変調など手法多様。", risks:"皮膚炎・粘膜炎・臓器特異副作用", cost:"総額30-100万円", duration:"1〜6週間", tags:["局所治療","外来可"] },
-  { id:104, name:"免疫チェックポイント阻害薬", type:"薬物", indication:"適応遺伝子/バイオマーカー陽性例", level:"推奨度A〜B（例）", summary:"免疫反応を活性化して腫瘍を攻撃。長期奏効例も。", risks:"免疫関連有害事象（肝炎・肺炎など）", cost:"月30-150万円目安", duration:"長期継続可", tags:["全身治療","バイオマーカー"] },
-  { id:105, name:"分子標的治療", type:"薬物", indication:"特定遺伝子変異陽性", level:"推奨度A（例）", summary:"腫瘍の分子異常を狙い撃ち。高い奏効が期待できる。", risks:"皮疹・下痢・肝機能障害など", cost:"月20-120万円目安", duration:"長期継続可", tags:["全身治療","精密医療"] }
+  { id:101, name:"手術療法", type:"外科", indication:"局所制御が可能な固形腫瘍", level:"推奨度A（例）",
+    summary:"腫瘍の外科的切除。早期がんでは根治を目指す主要選択肢。", risks:"出血・感染・術後合併症", cost:"目安: 30-150万円", duration:"1日〜数週間（入院含む）", tags:["根治目的","局所治療"] },
+  { id:102, name:"化学療法", type:"薬物", indication:"進行・再発例、補助療法", level:"推奨度A〜B（例）",
+    summary:"抗がん剤を用いた全身治療。レジメンにより効果と副作用が異なる。", risks:"骨髄抑制・悪心嘔吐・脱毛など", cost:"月10-50万円目安", duration:"3〜6ヶ月を1単位", tags:["全身治療","標準治療"] },
+  { id:103, name:"放射線療法", type:"局所", indication:"局所制御・術前/術後補助", level:"推奨度A（例）",
+    summary:"高エネルギー線で腫瘍細胞を破壊。定位照射や強度変調など手法多様。", risks:"皮膚炎・粘膜炎・臓器特異副作用", cost:"総額30-100万円", duration:"1〜6週間", tags:["局所治療","外来可"] },
+  { id:104, name:"免疫チェックポイント阻害薬", type:"薬物", indication:"バイオマーカー陽性例", level:"推奨度A〜B（例）",
+    summary:"免疫反応を活性化して腫瘍を攻撃。長期奏効例も。", risks:"免疫関連有害事象（肝炎・肺炎など）", cost:"月30-150万円目安", duration:"長期継続可", tags:["全身治療","バイオマーカー"] },
+  { id:105, name:"分子標的治療", type:"薬物", indication:"特定遺伝子変異陽性", level:"推奨度A（例）",
+    summary:"腫瘍の分子異常を狙い撃ち。高い奏効が期待できる。", risks:"皮疹・下痢・肝機能障害など", cost:"月20-120万円目安", duration:"長期継続可", tags:["全身治療","精密医療"] }
 ];
-/* エビデンス（新規：カード＆詳細） */
+
 const evidences = [
-  { id:201, title:"III期大腸がんの術後補助化学療法", type:"RCT/多施設", cancer:"大腸がん", year:2023, outcome:"無再発生存（DFS）改善 HR=0.78", level:"エビデンスレベルA",
-    summary:"手術後補助化学療法の有効性を検証。再発抑制効果を示唆。高齢層でも有効性は維持。",
-    link:"#（DOIやPubMedなど）" },
-  { id:202, title:"免疫CP阻害薬の長期成績（PD-L1陽性）", type:"メタ解析", cancer:"非小細胞肺がん", year:2024, outcome:"全生存（OS）延長 HR=0.72", level:"エビデンスレベルA",
-    summary:"PD-L1高発現例で免疫療法群が化学療法群を上回る長期生存を示した。",
-    link:"#（DOIやPubMedなど）" },
-  { id:203, title:"術前化学療法 vs 直手術（HER2陰性乳がん）", type:"RCT", cancer:"乳がん", year:2022, outcome:"pCR向上 OR=1.9", level:"エビデンスレベルB",
-    summary:"術前化学療法で病理学的完全奏効率が有意に上昇。腫瘍縮小により温存率も改善。",
-    link:"#（DOIやPubMedなど）" }
+  { id:201, title:"III期大腸がんの術後補助化学療法", type:"RCT/多施設", cancer:"大腸がん", year:2023, outcome:"DFS改善 HR=0.78", level:"レベルA",
+    summary:"手術後補助化学療法の有効性を検証。再発抑制効果を示唆。高齢層でも有効。", link:"#(DOI等)" },
+  { id:202, title:"免疫CP阻害薬の長期成績（PD-L1陽性）", type:"メタ解析", cancer:"NSCLC", year:2024, outcome:"OS延長 HR=0.72", level:"レベルA",
+    summary:"PD-L1高発現例で免疫療法が化学療法を上回る長期生存。", link:"#(DOI等)" },
+  { id:203, title:"術前化学療法 vs 直手術（HER2陰性乳がん）", type:"RCT", cancer:"乳がん", year:2022, outcome:"pCR向上 OR=1.9", level:"レベルB",
+    summary:"術前化学療法で病理学的完全奏効率が有意に上昇。温存率も改善。", link:"#(DOI等)" }
 ];
-/* 生存率（新規：カード＆詳細） */
+
 const survivals = [
   { id:301, cancer:"肺がん", stage:"全体", one:55, three:38, five:30, source:"国内がん登録（例）2020" },
   { id:302, cancer:"乳がん", stage:"全体", one:95, three:92, five:90, source:"国内がん登録（例）2020" },
@@ -114,16 +133,15 @@ const contactHTML = `<h2>お問い合わせ</h2>
     <input type="text" placeholder="お名前" required>
     <input type="email" placeholder="メールアドレス" required>
     <textarea rows="4" placeholder="お問い合わせ内容" required></textarea>
-    <button class="submit" type="submit">送信</button>
+    <button class="cta" type="submit">送信</button>
   </form>`;
 
-/* ===== 画面制御 ===== */
+/* ===== 画面制御（カード） ===== */
 let currentNode="start";
 const container=document.getElementById("card-container");
 const finalView=document.getElementById("final-view");
 const finalContent=document.getElementById("final-content");
 
-/* Tinderカード（質問）生成 */
 function createCard(nodeKey){
   const data=flow[nodeKey];
   const card=document.createElement("div");
@@ -160,24 +178,78 @@ function createCard(nodeKey){
   });
 }
 
-/* 分岐先 */
 function handleNext(nodeKey){
+  // 相談系
+  if(nodeKey==="concierge"){ showConciergeForm(); return; }
+  if(nodeKey==="ai"){ showAIConsult(); return; }
+
+  // 既存系
   if(nodeKey==="patientlist"){ showPatientsList(); return; }
   if(nodeKey==="treatment"){ showTreatmentsList(); return; }
-  if(nodeKey==="evidence"){ showEvidenceList(); return; }     // ← 追加
-  if(nodeKey==="survival"){ showSurvivalList(); return; }     // ← 追加
+  if(nodeKey==="evidence"){ showEvidenceList(); return; }
+  if(nodeKey==="survival"){ showSurvivalList(); return; }
   if(nodeKey==="contact"){ showFinal(contactHTML); return; }
+
+  // さらに質問がある場合
   createCard(nodeKey);
 }
 
-/* 共通：最終ビュー表示 */
 function showFinal(html){
   container.classList.remove("active");
   finalView.classList.add("active");
   finalContent.innerHTML=html;
 }
 
-/* ====== 患者：検索・フィルタ（既存） ====== */
+/* ====== 「コンシェルジュ通話」フォーム ====== */
+function showConciergeForm(){
+  showFinal(`
+    <h2>がんコンシェルジュ通話のご予約</h2>
+    <p>希望日時とご連絡先をお知らせください。専門スタッフが折り返します。</p>
+    <form onsubmit="event.preventDefault(); alert('送信しました。担当よりご連絡します。');">
+      <input type="text" placeholder="お名前" required>
+      <input type="tel" placeholder="電話番号（ハイフン可）" required>
+      <input type="email" placeholder="メールアドレス" required>
+      <input type="datetime-local" required>
+      <textarea rows="4" placeholder="ご相談内容（任意）"></textarea>
+      <button class="cta" type="submit">予約を送信</button>
+    </form>
+  `);
+}
+
+/* ====== 「がん専門AIに相談」案内（将来チャットUIへ） ====== */
+function showAIConsult(){
+  showFinal(`
+    <h2>がん専門AIに相談</h2>
+    <p>AIが24時間ご相談に対応します。以下のボタンからチャットを開始できます。（デモ）</p>
+    <div class="detail-box">
+      <strong>AIに聞けること：</strong>
+      <ul>
+        <li>検査結果や用語の説明</li>
+        <li>治療法の一般的な違い・流れ</li>
+        <li>副作用対策の一般的情報</li>
+      </ul>
+      <small>※医療行為の最終判断は主治医とご相談ください。</small>
+    </div>
+    <button class="cta" onclick="startAIChatDemo()">AIチャットを開始する（デモ）</button>
+    <div id="ai-chat-area"></div>
+  `);
+}
+
+window.startAIChatDemo = function(){
+  const area = document.getElementById("ai-chat-area");
+  area.innerHTML = `
+    <div class="detail-box">
+      <strong>AIチャット（デモ）</strong>
+      <p>例：「免疫療法と分子標的治療の違いは？」</p>
+      <form onsubmit="event.preventDefault(); alert('AIが回答しました（デモ）');">
+        <input type="text" placeholder="質問を入力" required>
+        <button class="cta" type="submit" style="margin-top:8px;">送信</button>
+      </form>
+    </div>
+  `;
+};
+
+/* ====== 患者：検索・フィルタ／一覧・詳細 ====== */
 let currentFilters = { sex:"", cancer:"", stage:"", city:"", ageMin:"", ageMax:"", yearsMin:"", yearsMax:"", keyword:"" };
 function uniq(list,key){ return [...new Set(list.map(x=>x[key]))]; }
 function buildFilters(){
@@ -295,7 +367,7 @@ window.openContact=function(email){
         <input type="text" placeholder="お名前" required>
         <input type="email" placeholder="メールアドレス" required>
         <textarea rows="4" placeholder="メッセージ（${email} 宛）" required></textarea>
-        <button class="submit" type="submit">送信</button>
+        <button class="cta" type="submit">送信</button>
       </form>
     </div>`;
 };
@@ -348,12 +420,12 @@ window.openFacilityContact=function(tName){
         <input type="text" placeholder="お名前" required>
         <input type="email" placeholder="メールアドレス" required>
         <textarea rows="4" placeholder="『${tName}』について質問・相談事項" required></textarea>
-        <button class="submit" type="submit">送信</button>
+        <button class="cta" type="submit">送信</button>
       </form>
     </div>`;
 };
 
-/* ====== エビデンス：一覧＆詳細（新規） ====== */
+/* ====== エビデンス：一覧＆詳細 ====== */
 function renderEvidences(list){
   return `<div class="cards-grid">${
     list.map(e=>`
@@ -388,11 +460,11 @@ window.showEvidenceDetail = function(id){
     </div>
     <p>${e.summary}</p>
     <div class="detail-box"><strong>出典：</strong>${e.link}</div>
-    <button class="cta" onclick="openFacilityContact('エビデンス相談')">このエビデンスを元に相談する</button>
+    <button class="cta" onclick="openFacilityContact('エビデンス相談')">このエビデンスで相談する</button>
   `;
 };
 
-/* ====== 生存率：一覧＆詳細（新規） ====== */
+/* ====== 生存率：一覧＆詳細 ====== */
 function renderSurvivals(list){
   return `<div class="cards-grid">${
     list.map(s=>`
@@ -422,7 +494,7 @@ window.showSurvivalDetail = function(id){
       <div><strong>1年：</strong>${s.one}%　<strong>3年：</strong>${s.three}%　<strong>5年：</strong>${s.five}%</div>
       <div><strong>出典：</strong>${s.source}</div>
     </div>
-    <p>数値は統計の例示です。患者さん個々の背景により変動します。具体的な治療選択は主治医とご相談ください。</p>
+    <p>数値は統計の例示です。具体的な治療選択は主治医とご相談ください。</p>
     <button class="cta" onclick="openFacilityContact('${s.cancer} 生存率相談')">このがんの治療相談をする</button>
   `;
 };
