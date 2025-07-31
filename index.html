@@ -10,6 +10,7 @@
     font-family: "Arial", sans-serif;
     background: #fff;
     overflow: hidden;
+    touch-action: pan-y;
   }
   .view {
     display: none;
@@ -27,18 +28,9 @@
     display: flex;
     opacity: 1;
   }
-  .fade-out {
-    opacity: 0;
-  }
-  .btn {
-    margin: 10px;
-    padding: 15px 30px;
-    background: #e91e63;
-    color: white;
-    font-size: 20px;
-    border-radius: 10px;
-    cursor: pointer;
-  }
+  .fade-out { opacity: 0; }
+  h2 { font-size: 24px; margin: 20px; }
+  .hint { font-size: 16px; color: #888; margin-top: 30px; }
 </style>
 </head>
 <body>
@@ -51,64 +43,81 @@
 <!-- 2ndビュー -->
 <div class="view" id="view2">
   <h2>あなたはがん患者ですか？</h2>
-  <div style="display:flex; gap:20px;">
-    <div class="btn" onclick="showNext('patient')">はい</div>
-    <div class="btn" onclick="showNext('notpatient')">いいえ</div>
-  </div>
+  <div class="hint">右スワイプ：はい　／　左スワイプ：いいえ</div>
 </div>
 
 <!-- 3rdビュー（はいの場合） -->
 <div class="view" id="view3-patient">
   <h2>どちらを知りたいですか？</h2>
-  <div class="btn">エビデンスが見たい</div>
-  <div class="btn">同じ患者を知りたい</div>
+  <div class="hint">右スワイプ：エビデンス　／　左スワイプ：同じ患者</div>
 </div>
 
 <!-- 3rdビュー（いいえの場合） -->
 <div class="view" id="view3-notpatient">
   <h2>あなたは？</h2>
-  <div class="btn" onclick="showNext('family')">家族である</div>
-  <div class="btn" onclick="showNext('other')">それ以外</div>
+  <div class="hint">右スワイプ：家族　／　左スワイプ：それ以外</div>
 </div>
 
 <!-- 4thビュー（家族の場合） -->
 <div class="view" id="view4-family">
   <h2>何を知りたいですか？</h2>
-  <div class="btn">治療法を調べる</div>
-  <div class="btn">生存率を調べる</div>
+  <div class="hint">右スワイプ：治療法　／　左スワイプ：生存率</div>
 </div>
 
 <!-- 4thビュー（それ以外の場合） -->
 <div class="view" id="view4-other">
   <h2>あなたは？</h2>
-  <div class="btn">研究者である</div>
-  <div class="btn">それ以外</div>
+  <div class="hint">右スワイプ：研究者　／　左スワイプ：それ以外</div>
 </div>
 
 <script>
-  // 1秒後に1stビューをフェードアウト
-  setTimeout(() => {
-    document.getElementById("view1").classList.add("fade-out");
-    setTimeout(() => {
-      showView("view2");
-    }, 500);
-  }, 1000);
+let currentView = "view1";
 
-  function showView(id) {
-    document.querySelectorAll('.view').forEach(v => {
-      v.classList.remove('active');
-    });
-    const view = document.getElementById(id);
-    view.classList.add('active');
-    view.classList.remove('fade-out');
-  }
+// 1秒後に1stビューをフェードアウト
+setTimeout(() => {
+  document.getElementById("view1").classList.add("fade-out");
+  setTimeout(() => { showView("view2"); }, 500);
+}, 1000);
 
-  function showNext(type) {
-    if(type === 'patient') showView('view3-patient');
-    if(type === 'notpatient') showView('view3-notpatient');
-    if(type === 'family') showView('view4-family');
-    if(type === 'other') showView('view4-other');
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  currentView = id;
+}
+
+// スワイプ処理
+let startX = 0;
+document.addEventListener('touchstart', e => {
+  startX = e.changedTouches[0].clientX;
+});
+document.addEventListener('touchend', e => {
+  let endX = e.changedTouches[0].clientX;
+  let diffX = endX - startX;
+  if(Math.abs(diffX) > 50) { // スワイプ判定
+    if(diffX > 0) handleSwipe('right');
+    else handleSwipe('left');
   }
+});
+
+function handleSwipe(dir) {
+  switch(currentView) {
+    case "view2":
+      showView(dir === 'right' ? "view3-patient" : "view3-notpatient");
+      break;
+    case "view3-patient":
+      alert(dir === 'right' ? "エビデンスが見たい" : "同じ患者を知りたい");
+      break;
+    case "view3-notpatient":
+      showView(dir === 'right' ? "view4-family" : "view4-other");
+      break;
+    case "view4-family":
+      alert(dir === 'right' ? "治療法を調べる" : "生存率を調べる");
+      break;
+    case "view4-other":
+      alert(dir === 'right' ? "研究者である" : "それ以外");
+      break;
+  }
+}
 </script>
 
 </body>
