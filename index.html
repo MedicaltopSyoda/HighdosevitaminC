@@ -1,4 +1,4 @@
-　<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -109,18 +109,40 @@
 </div>
 
 <script>
-const cardsData = [
-  {question:"あなたはがん患者ですか？", left:"いいえ", right:"はい"},
-  {question:"(患者) どちらを知りたいですか？", left:"同じ患者", right:"エビデンス"},
-  {question:"(非患者) あなたは？", left:"それ以外", right:"家族"},
-  {question:"(家族) 何を知りたいですか？", left:"生存率", right:"治療法"},
-  {question:"(その他) あなたは？", left:"それ以外", right:"研究者"}
-];
+// カードデータ（分岐型）
+const flow = {
+  start: { question:"あなたはがん患者ですか？", left:"いいえ", right:"はい",
+    next:{left:"notpatient", right:"patient"} },
+  patient: { question:"どちらを知りたいですか？", left:"同じ患者", right:"エビデンス",
+    next:{left:"patientlist", right:"evidence"} },
+  notpatient: { question:"あなたは？", left:"それ以外", right:"家族",
+    next:{left:"other", right:"family"} },
+  family: { question:"何を知りたいですか？", left:"生存率", right:"治療法",
+    next:{left:"survival", right:"treatment"} },
+  other: { question:"あなたは？", left:"それ以外", right:"研究者",
+    next:{left:"contact", right:"contact"} }
+};
 
-let currentCardIndex = 0;
+// 最終ビューのHTML
+const results = {
+  evidence: "<h2>エビデンスリスト</h2><ul><li>治療法Aの論文</li><li>治療法Bの統計</li></ul>",
+  patientlist: "<h2>患者リスト</h2><ul><li>50代男性・肺がん</li><li>40代女性・乳がん</li></ul>",
+  treatment: "<h2>治療法リスト</h2><ul><li>手術療法</li><li>抗がん剤療法</li><li>免疫療法</li></ul>",
+  survival: "<h2>がん種ごとの生存率</h2><ul><li>肺がん：5年生存率 30%</li><li>乳がん：5年生存率 90%</li></ul>",
+  contact: `<h2>お問い合わせフォーム</h2>
+      <form>
+        <input type="text" placeholder="お名前">
+        <input type="email" placeholder="メールアドレス">
+        <textarea placeholder="お問い合わせ内容"></textarea>
+        <button type="submit">送信</button>
+      </form>`
+};
+
+let currentNode = "start";
 let container = document.getElementById("card-container");
 
-function createCard(data) {
+function createCard(nodeKey) {
+  const data = flow[nodeKey];
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
@@ -132,8 +154,7 @@ function createCard(data) {
   `;
   container.appendChild(card);
 
-  let startX = 0, currentX = 0;
-  let dragging = false;
+  let startX = 0, currentX = 0, dragging = false;
 
   card.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
@@ -150,47 +171,27 @@ function createCard(data) {
     dragging = false;
     if(Math.abs(currentX) > 100){
       let direction = currentX > 0 ? 'right' : 'left';
-      let choice = cardsData[currentCardIndex][direction];
+      let nextNode = data.next[direction];
 
       card.style.transform = `translateX(${currentX>0?500:-500}px) rotate(${currentX*0.1}deg)`;
       card.style.opacity = 0;
       setTimeout(()=> {
         container.removeChild(card);
-        handleChoice(choice);
+        handleNext(nextNode);
       }, 300);
-    }else{
+    } else {
       card.style.transform = `translateX(0) rotate(0deg)`;
     }
     currentX = 0;
   });
 }
 
-function handleChoice(choice){
-  // 分岐処理
-  if(choice==="エビデンス"){
-    showFinal("<h2>エビデンスリスト</h2><ul><li>治療法Aの論文</li><li>治療法Bの統計</li></ul>");
-  } else if(choice==="同じ患者"){
-    showFinal("<h2>患者リスト</h2><ul><li>50代男性・肺がん</li><li>40代女性・乳がん</li></ul>");
-  } else if(choice==="治療法"){
-    showFinal("<h2>治療法リスト</h2><ul><li>手術療法</li><li>抗がん剤療法</li><li>免疫療法</li></ul>");
-  } else if(choice==="生存率"){
-    showFinal("<h2>がん種ごとの生存率</h2><ul><li>肺がん：5年生存率 30%</li><li>乳がん：5年生存率 90%</li></ul>");
-  } else if(choice==="研究者" || choice==="それ以外"){
-    showFinal(`<h2>お問い合わせフォーム</h2>
-      <form>
-        <input type="text" placeholder="お名前">
-        <input type="email" placeholder="メールアドレス">
-        <textarea placeholder="お問い合わせ内容"></textarea>
-        <button type="submit">送信</button>
-      </form>`);
+function handleNext(nodeKey){
+  // 最終結果ならビュー表示
+  if(results[nodeKey]){
+    showFinal(results[nodeKey]);
   } else {
-    // まだ次のカードがある場合
-    currentCardIndex++;
-    if(currentCardIndex < cardsData.length){
-      createCard(cardsData[currentCardIndex]);
-    } else {
-      showFinal("<h2>終了しました</h2>");
-    }
+    createCard(nodeKey);
   }
 }
 
@@ -206,7 +207,7 @@ setTimeout(() => {
   setTimeout(() => {
     document.getElementById("view1").style.display = "none";
     document.getElementById("card-container").classList.add("active");
-    createCard(cardsData[currentCardIndex]);
+    createCard(currentNode);
   }, 500);
 }, 1000);
 </script>
