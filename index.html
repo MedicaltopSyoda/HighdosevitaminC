@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tinder風がん情報アプリ（患者ルートに相談分岐追加）</title>
+<title>Tinder風がん情報アプリ（完全統合版）</title>
 <style>
   body{margin:0;font-family:Arial,system-ui,-apple-system;background:#f8f8f8;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh}
   .view{display:none;position:absolute;width:100vw;height:100vh;justify-content:center;align-items:center;flex-direction:column;text-align:center;transition:opacity .5s}
@@ -18,11 +18,11 @@
   .card::before{content:"";position:absolute;inset:0;border-radius:16px;background:transparent;pointer-events:none;transition:background .15s}
   .card.swipe-left::before{background:rgba(233,30,99,.12)} .card.swipe-right::before{background:rgba(33,150,243,.12)}
 
-  /* 最終ビュー共通 */
+  /* 最終ビュー（中身入れ替え） */
   .final-wrap{background:#fff;padding:12px 12px 16px;width:96vw;max-width:600px;max-height:90vh;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.2);overflow:auto;text-align:left}
   .final-wrap h2{margin:6px 0 10px;font-size:20px}
 
-  /* グリッド＆カード（共通） */
+  /* 共通カードグリッド */
   .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
   .x-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:6px}
   .x-card h3{margin:0;font-size:16px;line-height:1.3}
@@ -30,11 +30,11 @@
   .x-tag{display:inline-block;font-size:11px;background:#f3f6fc;border:1px solid #e2e8f5;padding:2px 6px;border-radius:999px;margin-right:6px}
   .x-card button{margin-top:6px;width:100%;padding:8px;font-size:14px;border:none;border-radius:8px;background:#2196f3;color:#fff}
 
-  /* 詳細 */
+  /* 詳細＆ボタン */
   .detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .back-link{font-size:14px;color:#2196f3;text-decoration:underline;background:none;border:none}
   .detail-box{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px;margin:10px 0}
-  .cta{width:100%;padding:12px;font-size:16px;background:#e91e63;color:#fff;border:none;border-radius:8px}
+  .cta{width:100%;padding:12px;font-size:16px;background:#e91e63;color:#fff;border:none;border-radius:8px;margin-top:8px}
 
   /* 患者フィルタ */
   .filters{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;border-radius:12px 12px 0 0;z-index:2;padding:8px}
@@ -45,6 +45,18 @@
   .btn{padding:10px;border:none;border-radius:8px;font-size:14px}
   .btn-primary{background:#2196f3;color:#fff}.btn-ghost{background:#f3f3f3}
   .count{font-size:12px;color:#555;margin:4px 0 0 2px}
+
+  /* LINE風チャット（全画面モーダル） */
+  #chat-modal{position:fixed;inset:0;z-index:1000;background:#fff;display:none;flex-direction:column}
+  .chat-header{background:#2196f3;color:#fff;padding:12px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+  .chat-close{background:none;border:none;color:#fff;font-size:18px}
+  .chat-messages{flex:1;overflow-y:auto;padding:10px;background:#f5f5f5;display:flex;flex-direction:column;gap:6px}
+  .chat-bubble{max-width:70%;padding:8px 12px;border-radius:16px;line-height:1.4}
+  .chat-ai{background:#e0e0e0;align-self:flex-start;border-bottom-left-radius:0}
+  .chat-user{background:#2196f3;color:#fff;align-self:flex-end;border-bottom-right-radius:0}
+  .chat-input{display:flex;gap:6px;padding:8px;background:#fff;border-top:1px solid #ccc}
+  .chat-input input{flex:1;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:14px}
+  .chat-input button{padding:8px 12px;border:none;border-radius:8px;background:#2196f3;color:#fff}
 </style>
 </head>
 <body>
@@ -54,48 +66,49 @@
   がんの情報のすべてがここにある
 </div>
 
-<!-- Tinderカード -->
+<!-- Tinderカード（質問） -->
 <div class="view" id="card-container"></div>
 
-<!-- 最終ビュー（一覧・詳細・フォーム等） -->
+<!-- 最終ビュー（コンテンツ差し替え領域） -->
 <div class="view" id="final-view">
   <div class="final-wrap" id="final-content"></div>
 </div>
 
+<!-- LINE風AIチャット（全画面モーダル） -->
+<div id="chat-modal">
+  <div class="chat-header">
+    <span>AIがん相談</span>
+    <button class="chat-close" onclick="closeChat()">×閉じる</button>
+  </div>
+  <div class="chat-messages" id="chat-area">
+    <div class="chat-bubble chat-ai">こんにちは、AIがん相談です。どんなことでもお聞きください。</div>
+  </div>
+  <form class="chat-input" onsubmit="event.preventDefault();sendMessage();">
+    <input type="text" id="chat-input" placeholder="質問を入力…" required>
+    <button type="submit">送信</button>
+  </form>
+</div>
+
 <script>
-/* ===== 分岐定義（患者ルートに新設問＋相談分岐を追加） =====
-   左スワイプ＝左の選択肢、右スワイプ＝右の選択肢 */
+/* ================== 分岐（患者ルートに新設問＆相談分岐） ================== */
 const flow = {
-  start:          { q:"あなたはがん患者ですか？", left:"いいえ",         right:"はい",
-                    next:{ left:"notpatient", right:"patientChoice" } },
-
-  // ★ 追加：患者ルートの最初の分岐
-  patientChoice:  { q:"どうしますか？", left:"情報を閲覧したい", right:"すぐ相談したい",
-                    next:{ left:"patientInfo", right:"consultChoice" } },
-
-  // 「情報を閲覧したい」→ 既存の質問へ
-  patientInfo:    { q:"どちらを知りたいですか？", left:"同じ患者",   right:"エビデンス",
-                    next:{ left:"patientlist", right:"evidence" } },
-
-  // 「すぐ相談したい」→ 通話 or AI相談
-  consultChoice:  { q:"ご希望はどちらですか？", left:"がんコンシェルジュと通話したい", right:"がん専門AIに相談したい",
-                    next:{ left:"concierge", right:"ai" } },
-
-  // 非患者ルート（既存）
-  notpatient:     { q:"あなたは？", left:"それ以外", right:"家族",
-                    next:{ left:"other", right:"family" } },
-  family:         { q:"何を知りたいですか？", left:"生存率", right:"治療法",
-                    next:{ left:"survival", right:"treatment" } },
-  other:          { q:"あなたは？", left:"それ以外", right:"研究者",
-                    next:{ left:"contact", right:"contact" } }
+  start:{ q:"あなたはがん患者ですか？", left:"いいえ", right:"はい", next:{ left:"notpatient", right:"patientChoice" } },
+  patientChoice:{ q:"どうしますか？", left:"情報を閲覧したい", right:"すぐ相談したい", next:{ left:"patientInfo", right:"consultChoice" } },
+  patientInfo:{ q:"どちらを知りたいですか？", left:"同じ患者", right:"エビデンス", next:{ left:"patientlist", right:"evidence" } },
+  consultChoice:{ q:"ご希望はどちらですか？", left:"コンシェルジュ通話", right:"AI相談", next:{ left:"concierge", right:"ai" } },
+  notpatient:{ q:"あなたは？", left:"それ以外", right:"家族", next:{ left:"other", right:"family" } },
+  family:{ q:"何を知りたいですか？", left:"生存率", right:"治療法", next:{ left:"survival", right:"treatment" } },
+  other:{ q:"あなたは？", left:"それ以外", right:"研究者", next:{ left:"contact", right:"contact" } }
 };
 
-/* ===== データ ===== */
+/* ================== データ ================== */
 const patients = [
   { id:1,sex:"男性",age:55,cancer:"肺がん",stage:"Stage IIIA",years:2.0,city:"東京",  summary:"手術＋化学放射線療法後、分子標的薬を継続中。副作用マネジメントに関心。", contact:"patient1@example.com" },
   { id:2,sex:"女性",age:42,cancer:"乳がん",stage:"Stage IIB", years:1.5,city:"横浜",  summary:"術前化学療法→乳房温存→放射線。仕事と治療の両立の情報交換を希望。", contact:"patient2@example.com" },
   { id:3,sex:"男性",age:68,cancer:"前立腺がん",stage:"Stage IV", years:3.0,city:"名古屋",summary:"ホルモン療法と放射線を併用。運動・栄養の工夫も共有可能。", contact:"patient3@example.com" },
-  { id:4,sex:"女性",age:50,cancer:"大腸がん",stage:"Stage III", years:2.5,city:"大阪",  summary:"腹腔鏡手術後の補助化学療法。再発不安との向き合い方に関心。", contact:"patient4@example.com" }
+  { id:4,sex:"女性",age:50,cancer:"大腸がん",stage:"Stage III", years:2.5,city:"大阪",  summary:"腹腔鏡手術後の補助化学療法。再発不安との向き合い方に関心。", contact:"patient4@example.com" },
+  { id:5,sex:"男性",age:60,cancer:"胃がん",stage:"Stage II", years:1.2,city:"札幌",  summary:"幽門側胃切除後の補助療法。食事コントロールの経験共有。", contact:"patient5@example.com" },
+  { id:6,sex:"女性",age:35,cancer:"卵巣がん",stage:"Stage III", years:2.8,city:"福岡",  summary:"術後化学療法。妊孕性と治療の両立の情報が欲しい方へ。", contact:"patient6@example.com" }
 ];
 
 const treatments = [
@@ -126,17 +139,7 @@ const survivals = [
   { id:303, cancer:"大腸がん", stage:"全体", one:90, three:80, five:70, source:"国内がん登録（例）2020" }
 ];
 
-/* ===== 固定（問い合わせフォーム） ===== */
-const contactHTML = `<h2>お問い合わせ</h2>
-  <p>ご用件をお知らせください。担当よりご連絡いたします。</p>
-  <form onsubmit="event.preventDefault(); alert('送信しました');">
-    <input type="text" placeholder="お名前" required>
-    <input type="email" placeholder="メールアドレス" required>
-    <textarea rows="4" placeholder="お問い合わせ内容" required></textarea>
-    <button class="cta" type="submit">送信</button>
-  </form>`;
-
-/* ===== 画面制御（カード） ===== */
+/* ================== 共通UI制御 ================== */
 let currentNode="start";
 const container=document.getElementById("card-container");
 const finalView=document.getElementById("final-view");
@@ -146,12 +149,8 @@ function createCard(nodeKey){
   const data=flow[nodeKey];
   const card=document.createElement("div");
   card.className="card";
-  card.innerHTML=`
-    <div class="card-question">${data.q}</div>
-    <div class="card-options">
-      <div class="left-option">← ${data.left}</div>
-      <div class="right-option">${data.right} →</div>
-    </div>`;
+  card.innerHTML=`<div class="card-question">${data.q}</div>
+  <div class="card-options"><div class="left-option">← ${data.left}</div><div class="right-option">${data.right} →</div></div>`;
   container.appendChild(card);
 
   let startX=0,dx=0,drag=false;
@@ -180,17 +179,19 @@ function createCard(nodeKey){
 
 function handleNext(nodeKey){
   // 相談系
-  if(nodeKey==="concierge"){ showConciergeForm(); return; }
   if(nodeKey==="ai"){ showAIConsult(); return; }
+  if(nodeKey==="concierge"){ showConciergeForm(); return; }
 
-  // 既存系
+  // 一覧系
   if(nodeKey==="patientlist"){ showPatientsList(); return; }
   if(nodeKey==="treatment"){ showTreatmentsList(); return; }
   if(nodeKey==="evidence"){ showEvidenceList(); return; }
   if(nodeKey==="survival"){ showSurvivalList(); return; }
+
+  // 問い合わせ
   if(nodeKey==="contact"){ showFinal(contactHTML); return; }
 
-  // さらに質問がある場合
+  // さらに質問カードがある場合
   createCard(nodeKey);
 }
 
@@ -200,7 +201,16 @@ function showFinal(html){
   finalContent.innerHTML=html;
 }
 
-/* ====== 「コンシェルジュ通話」フォーム ====== */
+/* ================== コンシェルジュ通話（フォーム） ================== */
+const contactHTML = `<h2>お問い合わせ</h2>
+  <p>ご用件をお知らせください。担当よりご連絡いたします。</p>
+  <form onsubmit="event.preventDefault(); alert('送信しました');">
+    <input type="text" placeholder="お名前" required>
+    <input type="email" placeholder="メールアドレス" required>
+    <textarea rows="4" placeholder="お問い合わせ内容" required></textarea>
+    <button class="cta" type="submit">送信</button>
+  </form>`;
+
 function showConciergeForm(){
   showFinal(`
     <h2>がんコンシェルジュ通話のご予約</h2>
@@ -216,40 +226,45 @@ function showConciergeForm(){
   `);
 }
 
-/* ====== 「がん専門AIに相談」案内（将来チャットUIへ） ====== */
+/* ================== AI相談：案内→LINE風チャット ================== */
 function showAIConsult(){
   showFinal(`
     <h2>がん専門AIに相談</h2>
-    <p>AIが24時間ご相談に対応します。以下のボタンからチャットを開始できます。（デモ）</p>
-    <div class="detail-box">
-      <strong>AIに聞けること：</strong>
-      <ul>
-        <li>検査結果や用語の説明</li>
-        <li>治療法の一般的な違い・流れ</li>
-        <li>副作用対策の一般的情報</li>
-      </ul>
-      <small>※医療行為の最終判断は主治医とご相談ください。</small>
-    </div>
-    <button class="cta" onclick="startAIChatDemo()">AIチャットを開始する（デモ）</button>
-    <div id="ai-chat-area"></div>
+    <p>AIが24時間ご相談に対応します。以下のボタンからチャットを開始できます。</p>
+    <button class="cta" onclick="openChat()">AIチャットを開始する（デモ）</button>
   `);
 }
+function openChat(){
+  document.getElementById("chat-modal").style.display="flex";
+}
+function closeChat(){
+  document.getElementById("chat-modal").style.display="none";
+  // 初期メッセージにリセット
+  document.getElementById("chat-area").innerHTML =
+    '<div class="chat-bubble chat-ai">こんにちは、AIがん相談です。どんなことでもお聞きください。</div>';
+}
+function sendMessage(){
+  const input=document.getElementById("chat-input");
+  const text=input.value.trim();if(!text)return;
+  const area=document.getElementById("chat-area");
 
-window.startAIChatDemo = function(){
-  const area = document.getElementById("ai-chat-area");
-  area.innerHTML = `
-    <div class="detail-box">
-      <strong>AIチャット（デモ）</strong>
-      <p>例：「免疫療法と分子標的治療の違いは？」</p>
-      <form onsubmit="event.preventDefault(); alert('AIが回答しました（デモ）');">
-        <input type="text" placeholder="質問を入力" required>
-        <button class="cta" type="submit" style="margin-top:8px;">送信</button>
-      </form>
-    </div>
-  `;
-};
+  const userMsg=document.createElement("div");
+  userMsg.className="chat-bubble chat-user";
+  userMsg.textContent=text;
+  area.appendChild(userMsg);
+  area.scrollTop=area.scrollHeight;
+  input.value="";
 
-/* ====== 患者：検索・フィルタ／一覧・詳細 ====== */
+  setTimeout(()=>{
+    const aiMsg=document.createElement("div");
+    aiMsg.className="chat-bubble chat-ai";
+    aiMsg.textContent="AIのダミー回答です。標準治療・副作用など一般情報をお伝えします。";
+    area.appendChild(aiMsg);
+    area.scrollTop=area.scrollHeight;
+  },1000);
+}
+
+/* ================== 患者：検索・フィルタ／一覧・詳細 ================== */
 let currentFilters = { sex:"", cancer:"", stage:"", city:"", ageMin:"", ageMax:"", yearsMin:"", yearsMax:"", keyword:"" };
 function uniq(list,key){ return [...new Set(list.map(x=>x[key]))]; }
 function buildFilters(){
@@ -372,7 +387,7 @@ window.openContact=function(email){
     </div>`;
 };
 
-/* ====== 治療法：一覧＆詳細 ====== */
+/* ================== 治療法：一覧＆詳細 ================== */
 function renderTreatments(list){
   return `<div class="cards-grid">${
     list.map(t=>`
@@ -425,7 +440,7 @@ window.openFacilityContact=function(tName){
     </div>`;
 };
 
-/* ====== エビデンス：一覧＆詳細 ====== */
+/* ================== エビデンス：一覧＆詳細 ================== */
 function renderEvidences(list){
   return `<div class="cards-grid">${
     list.map(e=>`
@@ -464,7 +479,7 @@ window.showEvidenceDetail = function(id){
   `;
 };
 
-/* ====== 生存率：一覧＆詳細 ====== */
+/* ================== 生存率：一覧＆詳細 ================== */
 function renderSurvivals(list){
   return `<div class="cards-grid">${
     list.map(s=>`
@@ -499,7 +514,7 @@ window.showSurvivalDetail = function(id){
   `;
 };
 
-/* ===== 初期表示：1秒後に1stビューを閉じてカード開始 ===== */
+/* ================== 初期表示：1秒後スプラッシュ → カード開始 ================== */
 setTimeout(()=>{
   document.getElementById("view1").classList.add("fade-out");
   setTimeout(()=>{
