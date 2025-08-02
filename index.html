@@ -138,6 +138,30 @@
   .chat-input{ display:flex; gap:8px; padding:10px; padding-bottom:calc(10px + env(safe-area-inset-bottom)); background:var(--card); border-top:1px solid var(--border) }
   .chat-input input{ flex:1; padding:11px 12px; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--text) }
   .chat-input button{ padding:11px 14px; border:none; border-radius:999px; background:var(--primary); color:#fff }
+
+/* ▼▼ チュートリアル用スタイル ▼▼ */
+.tutorial {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 100;
+  display: flex; justify-content: center; align-items: center; color: #fff;
+}
+.tutorial-content {
+  background: rgba(255,255,255,.1); padding: 20px; border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.3); text-align: center;
+}
+.tutorial-icon {
+  font-size: 48px; animation: swipeAnim 1s infinite alternate;
+}
+@keyframes swipeAnim {
+  from { transform: translateX(-10px); }
+  to   { transform: translateX(10px); }
+}
+.start-btn {
+  margin-top: 12px; padding: 10px 16px; border: none;
+  border-radius: 999px; background: var(--primary); color: #fff;
+  font-size: 14px;
+}
+/* ▲▲ ここまで追加 ▲▲ */
+
 </style>
 </head>
 <body>
@@ -152,7 +176,13 @@
     <button class="chip" onclick="document.getElementById('about').style.display='block'">？ このアプリ</button>
   </div>
 </div>
-
+<div id="tutorial-overlay" class="tutorial">
+  <div class="tutorial-content">
+    <div class="tutorial-icon">👉</div>
+    <p><strong>右にスワイプ</strong>で「はい」<br><strong>左にスワイプ</strong>で「いいえ」</p>
+    <button class="start-btn" onclick="startTutorial()">タップして始める</button>
+  </div>
+</div>
 <!-- About sheet -->
 <div id="about" style="display:none; position:fixed; inset:0; z-index:40; background:rgba(0,0,0,.4)" onclick="if(event.target.id==='about'){this.style.display='none'}">
   <div style="width:min(92vw,560px); margin:12vh auto; background:var(--card); color:var(--text); border-radius:14px; box-shadow:var(--shadow); padding:14px">
@@ -628,6 +658,23 @@ setTimeout(()=>{
     createCard(currentNode);
   },500);
 },1000);
+
+function startTutorial() {
+  document.getElementById('tutorial-overlay').style.display = 'none';
+  const card = document.querySelector('.card');
+  if(card) {
+    card.animate([
+      { transform: 'translateX(0)' },
+      { transform: 'translateX(12px)' },
+      { transform: 'translateX(0)' }
+    ], { duration: 600, iterations: 2 });
+  }
+}
+
+// ページロード後にチュートリアル表示
+window.addEventListener('load', () => {
+  document.getElementById('tutorial-overlay').style.display = 'flex';
+});
 </script>
 </body>
 </html>
